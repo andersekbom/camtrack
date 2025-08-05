@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getCameras } from '../services/api'
 import CameraCard from './CameraCard'
 
-const CameraList = () => {
+const CameraList = ({ onView, onEdit, onDelete, onCamerasUpdate, refreshTrigger }) => {
   const [cameras, setCameras] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -14,6 +14,9 @@ const CameraList = () => {
         setError(null)
         const data = await getCameras()
         setCameras(data)
+        if (onCamerasUpdate) {
+          onCamerasUpdate(data)
+        }
       } catch (err) {
         setError(err.message)
       } finally {
@@ -22,7 +25,7 @@ const CameraList = () => {
     }
 
     fetchCameras()
-  }, [])
+  }, [refreshTrigger, onCamerasUpdate])
 
   if (loading) {
     return (
@@ -51,7 +54,13 @@ const CameraList = () => {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {cameras.map((camera) => (
-        <CameraCard key={camera.id} camera={camera} />
+        <CameraCard 
+          key={camera.id} 
+          camera={camera} 
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       ))}
     </div>
   )

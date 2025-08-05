@@ -88,3 +88,6 @@ Use Postman or curl for API testing during backend development. Frontend testing
 ## Testing Tools
 
 - Use the Puppeteer tool to test the GUI parts of the project.
+
+## Development Process
+- Use TDD (test driven development), meaning always first add a test and make sure it fails, then do the coding, then check that the test passes.
