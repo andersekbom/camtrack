@@ -84,3 +84,7 @@ Each phase should be completed fully before moving to the next, with testing aft
 ## Testing Strategy
 
 Use Postman or curl for API testing during backend development. Frontend testing involves manual verification of UI functionality. The application is designed for personal use, so no authentication is implemented.
+
+## Testing Tools
+
+- Use the Puppeteer tool to test the GUI parts of the project.
