@@ -1,15 +1,16 @@
 import { useState } from 'react'
 
-const CameraForm = ({ camera = {}, onSubmit, onCancel, isEdit = false }) => {
+const CameraForm = ({ camera, onSubmit, onCancel, isEdit = false }) => {
+  const initCamera = camera || {}
   const [formData, setFormData] = useState({
-    brand: camera.brand || '',
-    model: camera.model || '',
-    serial: camera.serial || '',
-    mechanical_status: camera.mechanical_status || '',
-    cosmetic_status: camera.cosmetic_status || '',
-    kamerastore_price: camera.kamerastore_price || '',
-    sold_price: camera.sold_price || '',
-    comment: camera.comment || ''
+    brand: initCamera.brand || '',
+    model: initCamera.model || '',
+    serial: initCamera.serial || '',
+    mechanical_status: initCamera.mechanical_status || '',
+    cosmetic_status: initCamera.cosmetic_status || '',
+    kamerastore_price: initCamera.kamerastore_price || '',
+    sold_price: initCamera.sold_price || '',
+    comment: initCamera.comment || ''
   })
   
   const [errors, setErrors] = useState({})
@@ -100,7 +101,7 @@ const CameraForm = ({ camera = {}, onSubmit, onCancel, isEdit = false }) => {
         {isEdit ? 'Edit Camera' : 'Add New Camera'}
       </h2>
       
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form data-testid="camera-form" onSubmit={handleSubmit} className="space-y-4">
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-1">
@@ -172,7 +173,7 @@ const CameraForm = ({ camera = {}, onSubmit, onCancel, isEdit = false }) => {
               <option value="1">1 - Poor</option>
               <option value="2">2 - Fair</option>
               <option value="3">3 - Good</option>
-              <option value="4">4 - Very Good</option>
+            <option value="4">4 - Very Good</option>
               <option value="5">5 - Excellent</option>
             </select>
             {errors.mechanical_status && <p className="text-red-500 text-sm mt-1">{errors.mechanical_status}</p>}
@@ -194,7 +195,7 @@ const CameraForm = ({ camera = {}, onSubmit, onCancel, isEdit = false }) => {
               <option value="">Select condition</option>
               <option value="1">1 - Poor</option>
               <option value="2">2 - Fair</option>
-              <option value="3">3 - Good</option>
+            <option value="3">3 - Good</option>
               <option value="4">4 - Very Good</option>
               <option value="5">5 - Excellent</option>
             </select>

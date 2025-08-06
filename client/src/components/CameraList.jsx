@@ -8,23 +8,26 @@ const CameraList = ({ onView, onEdit, onDelete, onCamerasUpdate, refreshTrigger 
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    const controller = new AbortController()
+    const { signal } = controller
     const fetchCameras = async () => {
+      setLoading(true)
+      setError(null)
       try {
-        setLoading(true)
-        setError(null)
-        const data = await getCameras()
+        const data = await getCameras(signal)
         setCameras(data)
-        if (onCamerasUpdate) {
-          onCamerasUpdate(data)
-        }
+        onCamerasUpdate?.(data)
       } catch (err) {
-        setError(err.message)
+        if (!signal.aborted) setError(err.message)
       } finally {
-        setLoading(false)
+        if (!signal.aborted) setLoading(false)
       }
     }
 
     fetchCameras()
+    return () => {
+      controller.abort()
+    }
   }, [refreshTrigger, onCamerasUpdate])
 
   if (loading) {
@@ -43,17 +46,17 @@ const CameraList = ({ onView, onEdit, onDelete, onCamerasUpdate, refreshTrigger 
     )
   }
 
-  if (cameras.length === 0) {
+  if (cameras && cameras.length === 0) {
     return (
-      <div className="text-center py-8">
+      <div data-testid="empty-state" className="text-center py-8">
         <div className="text-gray-500">No cameras yet. Add your first camera!</div>
       </div>
     )
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {cameras.map((camera) => (
+    <div data-testid="camera-list" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {cameras && cameras.map((camera) => (
         <CameraCard 
           key={camera.id} 
           camera={camera} 

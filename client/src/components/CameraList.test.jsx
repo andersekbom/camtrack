@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from '@testing-library/react'
+import { act } from 'react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import CameraList from './CameraList'
 import * as api from '../services/api'
@@ -62,11 +63,12 @@ describe('CameraList', () => {
     })
   })
 
-  it('fetches cameras on component mount', () => {
+  it('fetches cameras on component mount', async () => {
     vi.mocked(api.getCameras).mockResolvedValue([])
-    
-    render(<CameraList {...defaultProps} />)
-    
+
+    await act(async () => {
+      render(<CameraList {...defaultProps} />)
+    })
     expect(api.getCameras).toHaveBeenCalledTimes(1)
   })
 
@@ -87,11 +89,8 @@ describe('CameraList', () => {
 
   it('refetches cameras when refreshTrigger changes', async () => {
     const { rerender } = render(<CameraList {...defaultProps} refreshTrigger={0} />)
-    
     expect(api.getCameras).toHaveBeenCalledTimes(1)
-    
-    rerender(<CameraList {...defaultProps} refreshTrigger={1} />)
-    
+    await act(async () => rerender(<CameraList {...defaultProps} refreshTrigger={1} />))
     expect(api.getCameras).toHaveBeenCalledTimes(2)
   })
 })

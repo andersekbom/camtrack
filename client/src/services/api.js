@@ -4,8 +4,8 @@ import axios from 'axios'
 const BASE_URL = 'http://localhost:3000/api'
 
 // Camera API functions
-export const getCameras = async () => {
-  const response = await axios.get(`${BASE_URL}/cameras`)
+export const getCameras = async (signal) => {
+  const response = await axios.get(`${BASE_URL}/cameras`, { signal })
   return response.data
 }
 

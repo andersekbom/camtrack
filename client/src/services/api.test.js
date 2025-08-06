@@ -22,7 +22,7 @@ describe('API Service', () => {
       
       const result = await api.getCameras()
       
-      expect(mockedAxios.get).toHaveBeenCalledWith('http://localhost:3000/api/cameras')
+      expect(mockedAxios.get).toHaveBeenCalledWith('http://localhost:3000/api/cameras', { signal: undefined })
       expect(result).toEqual(mockCameras)
     })
 
