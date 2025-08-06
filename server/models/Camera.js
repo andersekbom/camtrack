@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const ImageService = require('../services/ImageService');
 
 class Camera {
   // Get all cameras with optional search and filter parameters
@@ -62,7 +63,10 @@ class Camera {
       query += ' ORDER BY created_at DESC';
 
       const stmt = db.prepare(query);
-      return stmt.all(...params);
+      const cameras = stmt.all(...params);
+      
+      // Enhance cameras with image information
+      return ImageService.enhanceCamerasWithImages(cameras);
     } catch (error) {
       throw new Error(`Error fetching cameras: ${error.message}`);
     }
@@ -72,7 +76,14 @@ class Camera {
   static getCameraById(id) {
     try {
       const stmt = db.prepare('SELECT * FROM cameras WHERE id = ?');
-      return stmt.get(id);
+      const camera = stmt.get(id);
+      
+      if (!camera) {
+        return null;
+      }
+      
+      // Enhance camera with image information
+      return ImageService.enhanceCameraWithImages(camera);
     } catch (error) {
       throw new Error(`Error fetching camera: ${error.message}`);
     }
@@ -101,18 +112,21 @@ class Camera {
         cosmetic_status
       );
 
+      // Determine if camera has user images
+      const has_user_images = !!(image1_path || image2_path);
+
       const stmt = db.prepare(`
         INSERT INTO cameras (
           brand, model, serial, mechanical_status, cosmetic_status,
           kamerastore_price, weighted_price, sold_price, comment,
-          image1_path, image2_path
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          image1_path, image2_path, has_user_images
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       const result = stmt.run(
         brand, model, serial, mechanical_status, cosmetic_status,
         kamerastore_price, weighted_price, sold_price, comment,
-        image1_path, image2_path
+        image1_path, image2_path, has_user_images ? 1 : 0
       );
 
       return this.getCameraById(result.lastInsertRowid);
@@ -141,11 +155,16 @@ class Camera {
         );
       }
 
+      // Update has_user_images flag if image paths changed
+      if (data.image1_path !== undefined || data.image2_path !== undefined) {
+        updatedData.has_user_images = !!(updatedData.image1_path || updatedData.image2_path) ? 1 : 0;
+      }
+
       const stmt = db.prepare(`
         UPDATE cameras SET
           brand = ?, model = ?, serial = ?, mechanical_status = ?, cosmetic_status = ?,
           kamerastore_price = ?, weighted_price = ?, sold_price = ?, comment = ?,
-          image1_path = ?, image2_path = ?, updated_at = CURRENT_TIMESTAMP
+          image1_path = ?, image2_path = ?, has_user_images = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `);
 
@@ -154,7 +173,8 @@ class Camera {
         updatedData.mechanical_status, updatedData.cosmetic_status,
         updatedData.kamerastore_price, updatedData.weighted_price,
         updatedData.sold_price, updatedData.comment,
-        updatedData.image1_path, updatedData.image2_path, id
+        updatedData.image1_path, updatedData.image2_path, 
+        updatedData.has_user_images, id
       );
 
       return this.getCameraById(id);
@@ -188,6 +208,26 @@ class Camera {
       return result.changes;
     } catch (error) {
       throw new Error(`Error clearing cameras: ${error.message}`);
+    }
+  }
+
+  // Get image statistics for all cameras
+  static getImageStatistics() {
+    try {
+      const stmt = db.prepare('SELECT * FROM cameras');
+      const cameras = stmt.all();
+      return ImageService.getImageStatistics(cameras);
+    } catch (error) {
+      throw new Error(`Error getting image statistics: ${error.message}`);
+    }
+  }
+
+  // Update has_user_images flags for all cameras
+  static updateAllHasUserImagesFlags() {
+    try {
+      return ImageService.updateAllHasUserImagesFlags();
+    } catch (error) {
+      throw new Error(`Error updating has_user_images flags: ${error.message}`);
     }
   }
 

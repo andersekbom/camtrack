@@ -12,6 +12,9 @@ app.use(express.json());
 // Serve uploaded images statically
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Serve cached images statically
+app.use('/cached-images', express.static(path.join(__dirname, 'cached_images')));
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
@@ -19,6 +22,18 @@ app.get('/api/health', (req, res) => {
 
 // Camera routes
 app.use('/api/cameras', require('./routes/cameras'));
+
+// Default Images routes
+app.use('/api/default-images', require('./routes/defaultImages'));
+
+// Image Search routes
+app.use('/api/image-search', require('./routes/imageSearch'));
+
+// Cache routes
+app.use('/api/cache', require('./routes/cache'));
+
+// Job Queue routes
+app.use('/api/jobs', require('./routes/jobs'));
 
 // Import/Export routes
 app.use('/api/export', require('./routes/importExport'));

@@ -1,4 +1,5 @@
 const Camera = require('../models/Camera');
+const jobQueue = require('../services/JobQueueService');
 
 class CameraController {
   // Get all cameras with optional search and filter parameters
@@ -129,7 +130,13 @@ class CameraController {
         image2_path
       });
 
-      res.status(201).json(camera);
+      // Schedule background job to fetch default image if no user images
+      const jobId = jobQueue.scheduleDefaultImageFetch(camera);
+      
+      res.status(201).json({
+        ...camera,
+        backgroundJobId: jobId
+      });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
