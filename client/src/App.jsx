@@ -4,6 +4,8 @@ import CameraList from './components/CameraList'
 import CameraForm from './components/CameraForm'
 import CameraDetail from './components/CameraDetail'
 import ConfirmDialog from './components/ConfirmDialog'
+import SearchBar from './components/SearchBar'
+import FilterPanel from './components/FilterPanel'
 import { createCamera, updateCamera, deleteCamera } from './services/api'
 
 function App() {
@@ -12,6 +14,9 @@ function App() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [cameraToDelete, setCameraToDelete] = useState(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filters, setFilters] = useState({})
+  const [showFilters, setShowFilters] = useState(false)
 
   const handleAddCamera = () => {
     setSelectedCamera(null)
@@ -81,6 +86,24 @@ function App() {
     setSelectedCamera(null)
   }
 
+  const handleSearch = useCallback((term) => {
+    setSearchTerm(term)
+  }, [])
+
+  const handleFiltersChange = useCallback((newFilters) => {
+    setFilters(newFilters)
+  }, [])
+
+  const handleToggleFilters = () => {
+    setShowFilters(!showFilters)
+  }
+
+  // Combine search and filters for API call
+  const combinedFilters = {
+    ...filters,
+    search: searchTerm
+  }
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -102,12 +125,29 @@ function App() {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {currentView === 'list' && (
-          <CameraList 
-            onView={handleViewCamera}
-            onEdit={handleEditCamera}
-            onDelete={handleDeleteCamera}
-            refreshTrigger={refreshTrigger}
-          />
+          <div className="space-y-6">
+            {/* Search and Filter Section */}
+            <div className="space-y-4">
+              <SearchBar 
+                onSearch={handleSearch} 
+                placeholder="Search by brand, model, or serial number..."
+              />
+              <FilterPanel 
+                onFiltersChange={handleFiltersChange}
+                isOpen={showFilters}
+                onToggle={handleToggleFilters}
+              />
+            </div>
+            
+            {/* Camera List */}
+            <CameraList 
+              onView={handleViewCamera}
+              onEdit={handleEditCamera}
+              onDelete={handleDeleteCamera}
+              refreshTrigger={refreshTrigger}
+              filters={combinedFilters}
+            />
+          </div>
         )}
 
         {currentView === 'form' && (
