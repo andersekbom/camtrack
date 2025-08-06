@@ -91,3 +91,7 @@ Use Postman or curl for API testing during backend development. Frontend testing
 
 ## Development Process
 - Use TDD (test driven development), meaning always first add a test and make sure it fails, then do the coding, then check that the test passes.
+
+## Git Workflow
+- Only commit after actual code changes, not after documentation or task file updates.
+- Commit after each major coding task. Don't commit when only updating task.md or documentation.

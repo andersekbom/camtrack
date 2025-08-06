@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import './App.css'
 import CameraList from './components/CameraList'
 import CameraForm from './components/CameraForm'
@@ -9,7 +9,6 @@ import { createCamera, updateCamera, deleteCamera } from './services/api'
 function App() {
   const [currentView, setCurrentView] = useState('list')
   const [selectedCamera, setSelectedCamera] = useState(null)
-  const [cameras, setCameras] = useState([])
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [cameraToDelete, setCameraToDelete] = useState(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
@@ -82,9 +81,6 @@ function App() {
     setSelectedCamera(null)
   }
 
-  const handleCamerasUpdate = (updatedCameras) => {
-    setCameras(updatedCameras)
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -110,7 +106,6 @@ function App() {
             onView={handleViewCamera}
             onEdit={handleEditCamera}
             onDelete={handleDeleteCamera}
-            onCamerasUpdate={handleCamerasUpdate}
             refreshTrigger={refreshTrigger}
           />
         )}

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getCameras } from '../services/api'
 import CameraCard from './CameraCard'
 
-const CameraList = ({ onView, onEdit, onDelete, onCamerasUpdate, refreshTrigger }) => {
+const CameraList = ({ onView, onEdit, onDelete, refreshTrigger }) => {
   const [cameras, setCameras] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -16,7 +16,6 @@ const CameraList = ({ onView, onEdit, onDelete, onCamerasUpdate, refreshTrigger 
       try {
         const data = await getCameras(signal)
         setCameras(data)
-        onCamerasUpdate?.(data)
       } catch (err) {
         if (!signal.aborted) setError(err.message)
       } finally {
@@ -28,7 +27,7 @@ const CameraList = ({ onView, onEdit, onDelete, onCamerasUpdate, refreshTrigger 
     return () => {
       controller.abort()
     }
-  }, [refreshTrigger, onCamerasUpdate])
+  }, [refreshTrigger])
 
   if (loading) {
     return (
