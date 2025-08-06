@@ -12,6 +12,11 @@ export const getCameras = async (filters = {}, signal) => {
     params.append('search', filters.search)
   }
   
+  // Add brand filter
+  if (filters.brand) {
+    params.append('brand', filters.brand)
+  }
+  
   // Add mechanical status filters
   if (filters.mechanicalStatus && filters.mechanicalStatus.length > 0) {
     filters.mechanicalStatus.forEach(status => {
@@ -77,5 +82,36 @@ export const updateCamera = async (id, updates) => {
 
 export const deleteCamera = async (id) => {
   const response = await axios.delete(`${BASE_URL}/cameras/${id}`)
+  return response.data
+}
+
+export const clearAllCameras = async () => {
+  const response = await axios.delete(`${BASE_URL}/cameras/clear`)
+  return response.data
+}
+
+// Import/Export functions
+export const exportCameras = async () => {
+  const response = await axios.get(`${BASE_URL}/export`, {
+    responseType: 'blob' // Important for file downloads
+  })
+  return response.data
+}
+
+export const importCameras = async (csvFile) => {
+  const formData = new FormData()
+  formData.append('csvFile', csvFile)
+  
+  const response = await axios.post(`${BASE_URL}/import`, formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+  return response.data
+}
+
+// Summary statistics
+export const getSummary = async () => {
+  const response = await axios.get(`${BASE_URL}/summary`)
   return response.data
 }

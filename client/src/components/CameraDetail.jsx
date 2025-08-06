@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getCamera } from '../services/api'
+import StarRating from './StarRating'
 
 const CameraDetail = ({ cameraId, onEdit, onDelete, onClose }) => {
   const [camera, setCamera] = useState(null)
@@ -184,16 +185,16 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose }) => {
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <div className="text-sm font-medium text-gray-700">Mechanical Status</div>
-                <div className={`text-lg font-semibold ${getStatusColor(camera.mechanical_status)}`}>
-                  {camera.mechanical_status ? `${camera.mechanical_status}/5 - ${getStatusText(camera.mechanical_status)}` : 'Not specified'}
+                <div className="text-sm font-medium text-gray-700 mb-2">Mechanical Status</div>
+                <div className="flex items-center gap-3">
+                  <StarRating rating={camera.mechanical_status} showLabel={true} />
                 </div>
               </div>
               
               <div>
-                <div className="text-sm font-medium text-gray-700">Cosmetic Status</div>
-                <div className={`text-lg font-semibold ${getStatusColor(camera.cosmetic_status)}`}>
-                  {camera.cosmetic_status ? `${camera.cosmetic_status}/5 - ${getStatusText(camera.cosmetic_status)}` : 'Not specified'}
+                <div className="text-sm font-medium text-gray-700 mb-2">Cosmetic Status</div>
+                <div className="flex items-center gap-3">
+                  <StarRating rating={camera.cosmetic_status} showLabel={true} />
                 </div>
               </div>
             </div>

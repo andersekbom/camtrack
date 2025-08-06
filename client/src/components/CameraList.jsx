@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { getCameras } from '../services/api'
 import CameraCard from './CameraCard'
+import CameraListItem from './CameraListItem'
+import LoadingSpinner from './LoadingSpinner'
 
-const CameraList = ({ onView, onEdit, onDelete, refreshTrigger, filters = {} }) => {
+const CameraList = ({ onView, onEdit, onDelete, refreshTrigger, filters = {}, viewMode = 'grid', darkMode = false }) => {
   const [cameras, setCameras] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -30,11 +32,7 @@ const CameraList = ({ onView, onEdit, onDelete, refreshTrigger, filters = {} }) 
   }, [refreshTrigger, filters])
 
   if (loading) {
-    return (
-      <div className="text-center py-8">
-        <div className="text-gray-500">Loading cameras...</div>
-      </div>
-    )
+    return <LoadingSpinner text="Loading cameras..." />
   }
 
   if (error) {
@@ -53,16 +51,42 @@ const CameraList = ({ onView, onEdit, onDelete, refreshTrigger, filters = {} }) 
     )
   }
 
+  if (viewMode === 'list') {
+    return (
+      <div data-testid="camera-list" className="space-y-1">
+        {cameras && cameras.map((camera, index) => (
+          <div
+            key={camera.id}
+            className="animate-fade-in"
+            style={{ animationDelay: `${index * 0.02}s` }}
+          >
+            <CameraListItem 
+              camera={camera} 
+              onView={onView}
+              darkMode={darkMode}
+            />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
-    <div data-testid="camera-list" className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {cameras && cameras.map((camera) => (
-        <CameraCard 
-          key={camera.id} 
-          camera={camera} 
-          onView={onView}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />
+    <div data-testid="camera-list" className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      {cameras && cameras.map((camera, index) => (
+        <div
+          key={camera.id}
+          className="animate-fade-in"
+          style={{ animationDelay: `${index * 0.05}s` }}
+        >
+          <CameraCard 
+            camera={camera} 
+            onView={onView}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            darkMode={darkMode}
+          />
+        </div>
       ))}
     </div>
   )

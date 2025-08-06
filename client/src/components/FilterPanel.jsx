@@ -69,15 +69,15 @@ const FilterPanel = ({ onFiltersChange, isOpen, onToggle }) => {
   const hasActiveFilters = mechanicalStatus.length > 0 || cosmeticStatus.length > 0 || minPrice || maxPrice
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg">
+    <div className="bg-white border border-gray-200 rounded-lg relative">
       {/* Filter Toggle Button */}
       <button
         onClick={onToggle}
         className="w-full px-4 py-3 flex items-center justify-between text-left text-gray-700 hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
       >
         <div className="flex items-center">
-          <svg className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
+          <svg className="h-4 w-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
           </svg>
           <span className="font-medium">Filters</span>
           {hasActiveFilters && (
@@ -87,7 +87,7 @@ const FilterPanel = ({ onFiltersChange, isOpen, onToggle }) => {
           )}
         </div>
         <svg 
-          className={`h-5 w-5 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`} 
+          className={`h-4 w-4 transition-transform duration-200 flex-shrink-0 ${isOpen ? 'transform rotate-180' : ''}`} 
           fill="none" 
           viewBox="0 0 24 24" 
           stroke="currentColor"
@@ -99,7 +99,7 @@ const FilterPanel = ({ onFiltersChange, isOpen, onToggle }) => {
       {/* Filter Content */}
       {isOpen && (
         <div className="px-4 pb-4 border-t border-gray-200">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
             {/* Mechanical Status Filter */}
             <div>
               <h3 className="text-sm font-medium text-gray-900 mb-3">Mechanical Condition</h3>
@@ -137,7 +137,7 @@ const FilterPanel = ({ onFiltersChange, isOpen, onToggle }) => {
             </div>
 
             {/* Price Range Filter */}
-            <div className="md:col-span-2 lg:col-span-2">
+            <div className="md:col-span-2">
               <h3 className="text-sm font-medium text-gray-900 mb-3">Price Range</h3>
               <div className="grid grid-cols-2 gap-3">
                 <div>

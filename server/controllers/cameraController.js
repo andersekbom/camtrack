@@ -1,10 +1,52 @@
 const Camera = require('../models/Camera');
 
 class CameraController {
-  // Get all cameras
+  // Get all cameras with optional search and filter parameters
   static async getAllCameras(req, res) {
     try {
-      const cameras = Camera.getAllCameras();
+      const {
+        search,
+        brand,
+        mechanicalStatus,
+        cosmeticStatus,
+        minPrice,
+        maxPrice
+      } = req.query;
+
+      // Parse filter parameters
+      const options = {};
+      
+      if (search) {
+        options.search = search;
+      }
+      
+      if (brand) {
+        options.brand = brand;
+      }
+      
+      if (mechanicalStatus) {
+        // Handle both single values and arrays
+        options.mechanicalStatus = Array.isArray(mechanicalStatus) 
+          ? mechanicalStatus.map(Number) 
+          : [Number(mechanicalStatus)];
+      }
+      
+      if (cosmeticStatus) {
+        // Handle both single values and arrays
+        options.cosmeticStatus = Array.isArray(cosmeticStatus)
+          ? cosmeticStatus.map(Number)
+          : [Number(cosmeticStatus)];
+      }
+      
+      if (minPrice !== undefined && minPrice !== '') {
+        options.minPrice = parseFloat(minPrice);
+      }
+      
+      if (maxPrice !== undefined && maxPrice !== '') {
+        options.maxPrice = parseFloat(maxPrice);
+      }
+
+      const cameras = Camera.getAllCameras(options);
       res.json(cameras);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -41,6 +83,19 @@ class CameraController {
         comment
       } = req.body;
 
+      // Extract image file paths from uploaded files
+      let image1_path = null;
+      let image2_path = null;
+      
+      if (req.files) {
+        if (req.files.image1 && req.files.image1[0]) {
+          image1_path = `uploads/cameras/${req.files.image1[0].filename}`;
+        }
+        if (req.files.image2 && req.files.image2[0]) {
+          image2_path = `uploads/cameras/${req.files.image2[0].filename}`;
+        }
+      }
+
       // Validate required fields
       if (!brand || !model) {
         return res.status(400).json({ 
@@ -69,7 +124,9 @@ class CameraController {
         cosmetic_status,
         kamerastore_price,
         sold_price,
-        comment
+        comment,
+        image1_path,
+        image2_path
       });
 
       res.status(201).json(camera);
@@ -83,6 +140,16 @@ class CameraController {
     try {
       const { id } = req.params;
       const updates = req.body;
+
+      // Extract image file paths from uploaded files
+      if (req.files) {
+        if (req.files.image1 && req.files.image1[0]) {
+          updates.image1_path = `uploads/cameras/${req.files.image1[0].filename}`;
+        }
+        if (req.files.image2 && req.files.image2[0]) {
+          updates.image2_path = `uploads/cameras/${req.files.image2[0].filename}`;
+        }
+      }
 
       // Validate status values if provided
       if (updates.mechanical_status && (updates.mechanical_status < 1 || updates.mechanical_status > 5)) {
@@ -130,6 +197,23 @@ class CameraController {
       if (error.message.includes('Camera not found')) {
         return res.status(404).json({ error: error.message });
       }
+      res.status(500).json({ error: error.message });
+    }
+  }
+
+  // Clear all cameras (for development/testing)
+  static async clearAllCameras(req, res) {
+    try {
+      console.log('Clear all cameras endpoint hit');
+      const deletedCount = Camera.clearAllCameras();
+      console.log('Deleted count:', deletedCount);
+      
+      res.json({ 
+        message: 'All cameras cleared successfully', 
+        deletedCount 
+      });
+    } catch (error) {
+      console.error('Clear all cameras error:', error);
       res.status(500).json({ error: error.message });
     }
   }

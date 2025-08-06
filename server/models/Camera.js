@@ -1,11 +1,68 @@
 const db = require('../config/database');
 
 class Camera {
-  // Get all cameras
-  static getAllCameras() {
+  // Get all cameras with optional search and filter parameters
+  static getAllCameras(options = {}) {
     try {
-      const stmt = db.prepare('SELECT * FROM cameras ORDER BY created_at DESC');
-      return stmt.all();
+      const {
+        search,
+        brand,
+        mechanicalStatus,
+        cosmeticStatus,
+        minPrice,
+        maxPrice
+      } = options;
+
+      let query = 'SELECT * FROM cameras';
+      const params = [];
+      const conditions = [];
+
+      // Add search functionality
+      if (search && search.trim()) {
+        conditions.push('(LOWER(brand) LIKE ? OR LOWER(model) LIKE ? OR LOWER(serial) LIKE ?)');
+        const searchTerm = `%${search.toLowerCase()}%`;
+        params.push(searchTerm, searchTerm, searchTerm);
+      }
+
+      // Add brand filter
+      if (brand && brand.trim()) {
+        conditions.push('LOWER(brand) = ?');
+        params.push(brand.toLowerCase());
+      }
+
+      // Add mechanical status filter
+      if (mechanicalStatus && Array.isArray(mechanicalStatus) && mechanicalStatus.length > 0) {
+        const placeholders = mechanicalStatus.map(() => '?').join(',');
+        conditions.push(`mechanical_status IN (${placeholders})`);
+        params.push(...mechanicalStatus);
+      }
+
+      // Add cosmetic status filter
+      if (cosmeticStatus && Array.isArray(cosmeticStatus) && cosmeticStatus.length > 0) {
+        const placeholders = cosmeticStatus.map(() => '?').join(',');
+        conditions.push(`cosmetic_status IN (${placeholders})`);
+        params.push(...cosmeticStatus);
+      }
+
+      // Add price range filters
+      if (minPrice !== undefined && minPrice !== null && minPrice >= 0) {
+        conditions.push('weighted_price >= ?');
+        params.push(minPrice);
+      }
+
+      if (maxPrice !== undefined && maxPrice !== null && maxPrice >= 0) {
+        conditions.push('weighted_price <= ?');
+        params.push(maxPrice);
+      }
+
+      // Build final query
+      if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
+      }
+      query += ' ORDER BY created_at DESC';
+
+      const stmt = db.prepare(query);
+      return stmt.all(...params);
     } catch (error) {
       throw new Error(`Error fetching cameras: ${error.message}`);
     }
@@ -120,6 +177,17 @@ class Camera {
       return result.changes > 0;
     } catch (error) {
       throw new Error(`Error deleting camera: ${error.message}`);
+    }
+  }
+
+  // Clear all cameras (for development/testing)
+  static clearAllCameras() {
+    try {
+      const stmt = db.prepare('DELETE FROM cameras');
+      const result = stmt.run();
+      return result.changes;
+    } catch (error) {
+      throw new Error(`Error clearing cameras: ${error.message}`);
     }
   }
 

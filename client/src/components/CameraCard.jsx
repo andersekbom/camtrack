@@ -1,4 +1,6 @@
-const CameraCard = ({ camera, onView, onEdit, onDelete }) => {
+import StarRating from './StarRating'
+
+const CameraCard = ({ camera, onView, onEdit, onDelete, darkMode = false }) => {
   const {
     brand,
     model,
@@ -23,16 +25,22 @@ const CameraCard = ({ camera, onView, onEdit, onDelete }) => {
   const hasImage = primaryImage !== null
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-shadow overflow-hidden">
+    <div 
+      onClick={() => onView(camera)}
+      className={`rounded-lg shadow-md border hover-lift transition-all-smooth overflow-hidden cursor-pointer hover:shadow-lg ${
+        darkMode 
+          ? 'bg-gray-800 border-gray-600 hover:border-blue-500' 
+          : 'bg-white border-gray-200 hover:border-blue-300'
+      }`}
+    >
       {/* Image Section */}
-      <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+      <div className="w-full h-24 bg-gray-100 flex items-center justify-center">
         {hasImage ? (
           <img
             src={`http://localhost:3000/${primaryImage}`}
             alt={`${brand} ${model}`}
             className="w-full h-full object-cover"
             onError={(e) => {
-              // Fallback to placeholder if image fails to load
               e.target.style.display = 'none'
               e.target.nextSibling.style.display = 'flex'
             }}
@@ -43,18 +51,20 @@ const CameraCard = ({ camera, onView, onEdit, onDelete }) => {
           style={{ display: hasImage ? 'none' : 'flex' }}
         >
           <div className="text-center text-gray-400">
-            <svg className="mx-auto h-12 w-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="mx-auto h-8 w-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <p className="text-sm">No Image</p>
+            <p className="text-xs">No Image</p>
           </div>
         </div>
       </div>
 
       {/* Content Section */}
-      <div className="p-6">
+      <div className="p-3">
         {/* Camera Brand and Model */}
-        <div className="font-semibold text-lg text-gray-900 mb-2">
+        <div className={`font-semibold text-base mb-2 transition-colors duration-200 ${
+          darkMode ? 'text-white' : 'text-gray-900'
+        }`}>
           {brand} {model}
         </div>
 
@@ -66,52 +76,32 @@ const CameraCard = ({ camera, onView, onEdit, onDelete }) => {
       )}
 
       {/* Status Information */}
-      <div className="flex gap-4 mb-3 text-sm">
+      <div className="space-y-2 mb-3 text-xs">
         {mechanical_status && (
-          <div className="text-gray-700">
-            <span className="font-medium">Mechanical:</span> {mechanical_status}/5
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">Mechanical:</span>
+            <StarRating rating={mechanical_status} size="small" />
           </div>
         )}
         {cosmetic_status && (
-          <div className="text-gray-700">
-            <span className="font-medium">Cosmetic:</span> {cosmetic_status}/5
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">Cosmetic:</span>
+            <StarRating rating={cosmetic_status} size="small" />
           </div>
         )}
       </div>
 
       {/* Price */}
-      <div className="text-lg font-bold text-green-600 mb-3">
+      <div className="text-base font-bold text-green-600 mb-3">
         {formatPrice(weighted_price)}
       </div>
 
       {/* Comment */}
       {comment && (
-        <div className="text-sm text-gray-600 italic border-t pt-3 mb-4">
+        <div className="text-sm text-gray-600 italic border-t pt-3">
           {comment}
         </div>
       )}
-
-      {/* Action Buttons */}
-      <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
-        <button
-          onClick={() => onView(camera)}
-          className="flex-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          View
-        </button>
-        <button
-          onClick={() => onEdit(camera)}
-          className="flex-1 px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => onDelete(camera)}
-          className="flex-1 px-3 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-md hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500"
-        >
-          Delete
-        </button>
-        </div>
       </div>
     </div>
   )
