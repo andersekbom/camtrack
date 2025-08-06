@@ -9,6 +9,7 @@ import FilterPanel from './components/FilterPanel'
 import BrandFilter from './components/BrandFilter'
 import ImportExport from './components/ImportExport'
 import Summary from './components/Summary'
+import DefaultImagesAdmin from './components/DefaultImagesAdmin'
 import { createCamera, updateCamera, deleteCamera, clearAllCameras } from './services/api'
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
   const [viewMode, setViewMode] = useState('grid') // 'grid' or 'list'
   const [selectedBrand, setSelectedBrand] = useState('')
   const [showClearConfirm, setShowClearConfirm] = useState(false)
+  const [showDefaultImagesAdmin, setShowDefaultImagesAdmin] = useState(false)
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode')
     return saved ? JSON.parse(saved) : false
@@ -192,7 +194,15 @@ function App() {
                   </svg>
                 )}
               </button>
-              {/* Dev/Testing Button - Only show in development */}
+              {/* Dev/Testing Buttons - Only show in development */}
+              <button
+                onClick={() => setShowDefaultImagesAdmin(true)}
+                className="px-2 py-2 sm:px-3 text-xs sm:text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-all-smooth focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                title="Default Images Admin"
+              >
+                <span className="hidden sm:inline">Images</span>
+                <span className="sm:inline md:hidden">🖼️</span>
+              </button>
               <button
                 onClick={handleClearDatabase}
                 className="px-2 py-2 sm:px-3 text-xs sm:text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-all-smooth focus:outline-none focus:ring-2 focus:ring-red-500"
@@ -352,6 +362,14 @@ function App() {
           onCancel={cancelClearDatabase}
           isDestructive={true}
         />
+
+        {/* Default Images Admin Modal */}
+        {showDefaultImagesAdmin && (
+          <DefaultImagesAdmin
+            onClose={() => setShowDefaultImagesAdmin(false)}
+            darkMode={darkMode}
+          />
+        )}
       </main>
     </div>
   )

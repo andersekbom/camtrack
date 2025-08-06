@@ -10,7 +10,11 @@ const CameraCard = ({ camera, onView, onEdit, onDelete, darkMode = false }) => {
     weighted_price,
     comment,
     image1_path,
-    image2_path
+    image2_path,
+    primary_image,
+    has_user_images,
+    image_source,
+    default_image_info
   } = camera
 
   const formatPrice = (price) => {
@@ -21,8 +25,23 @@ const CameraCard = ({ camera, onView, onEdit, onDelete, darkMode = false }) => {
     }).format(price)
   }
 
-  const primaryImage = image1_path || image2_path
-  const hasImage = primaryImage !== null
+  // Use the enhanced image system - primary_image includes fallback logic
+  const displayImage = primary_image || image1_path || image2_path
+  const hasImage = displayImage !== null
+  const isDefaultImage = !has_user_images && image_source !== 'user'
+  
+  // Build proper image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null
+    
+    // If it's a cached image or external URL, use as-is
+    if (imagePath.startsWith('http') || imagePath.startsWith('/cached-images/')) {
+      return imagePath
+    }
+    
+    // For local uploads, add the base URL
+    return imagePath.startsWith('/') ? `http://localhost:3000${imagePath}` : `http://localhost:3000/${imagePath}`
+  }
 
   return (
     <div 
@@ -34,29 +53,49 @@ const CameraCard = ({ camera, onView, onEdit, onDelete, darkMode = false }) => {
       }`}
     >
       {/* Image Section */}
-      <div className="w-full h-24 bg-gray-100 flex items-center justify-center">
+      <div className={`relative w-full h-24 flex items-center justify-center ${
+        darkMode ? 'bg-gray-700' : 'bg-gray-100'
+      }`}>
         {hasImage ? (
-          <img
-            src={`http://localhost:3000/${primaryImage}`}
-            alt={`${brand} ${model}`}
-            className="w-full h-full object-cover"
-            onError={(e) => {
-              e.target.style.display = 'none'
-              e.target.nextSibling.style.display = 'flex'
-            }}
-          />
-        ) : null}
-        <div 
-          className={`w-full h-full flex items-center justify-center ${hasImage ? 'hidden' : 'flex'}`}
-          style={{ display: hasImage ? 'none' : 'flex' }}
-        >
-          <div className="text-center text-gray-400">
+          <div className="relative w-full h-full">
+            <img
+              src={getImageUrl(displayImage)}
+              alt={`${brand} ${model}`}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none'
+                e.target.nextSibling.style.display = 'flex'
+              }}
+            />
+            {/* Default image indicator */}
+            {isDefaultImage && (
+              <div className="absolute top-1 right-1 bg-blue-500 text-white text-xs px-1.5 py-0.5 rounded-full opacity-75">
+                {image_source === 'default_model' && 'REF'}
+                {image_source === 'default_brand' && 'BRAND'}
+                {image_source === 'placeholder' && 'PLACEHOLDER'}
+              </div>
+            )}
+            {/* Fallback placeholder for failed image loads */}
+            <div 
+              className="hidden w-full h-full flex items-center justify-center"
+              style={{ display: 'none' }}
+            >
+              <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-400'}`}>
+                <svg className="mx-auto h-8 w-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                <p className="text-xs">Image Failed</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-400'}`}>
             <svg className="mx-auto h-8 w-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
             <p className="text-xs">No Image</p>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Content Section */}

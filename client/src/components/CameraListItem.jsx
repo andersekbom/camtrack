@@ -10,7 +10,10 @@ const CameraListItem = ({ camera, onView }) => {
     weighted_price,
     comment,
     image1_path,
-    image2_path
+    image2_path,
+    primary_image,
+    has_user_images,
+    image_source
   } = camera
 
   const formatPrice = (price) => {
@@ -21,8 +24,23 @@ const CameraListItem = ({ camera, onView }) => {
     }).format(price)
   }
 
-  const primaryImage = image1_path || image2_path
-  const hasImage = primaryImage !== null
+  // Use the enhanced image system - primary_image includes fallback logic
+  const displayImage = primary_image || image1_path || image2_path
+  const hasImage = displayImage !== null
+  const isDefaultImage = !has_user_images && image_source !== 'user'
+  
+  // Build proper image URL
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null
+    
+    // If it's a cached image or external URL, use as-is
+    if (imagePath.startsWith('http') || imagePath.startsWith('/cached-images/')) {
+      return imagePath
+    }
+    
+    // For local uploads, add the base URL
+    return imagePath.startsWith('/') ? `http://localhost:3000${imagePath}` : `http://localhost:3000/${imagePath}`
+  }
 
   return (
     <div 
@@ -31,26 +49,37 @@ const CameraListItem = ({ camera, onView }) => {
     >
       <div className="px-4 py-2 flex items-center gap-3">
         {/* Compact Image */}
-        <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+        <div className="relative w-12 h-12 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
           {hasImage ? (
-            <img
-              src={`http://localhost:3000/${primaryImage}`}
-              alt={`${brand} ${model}`}
-              className="w-full h-full object-cover rounded"
-              onError={(e) => {
-                e.target.style.display = 'none'
-                e.target.nextSibling.style.display = 'flex'
-              }}
-            />
-          ) : null}
-          <div 
-            className={`w-full h-full flex items-center justify-center ${hasImage ? 'hidden' : 'flex'}`}
-            style={{ display: hasImage ? 'none' : 'flex' }}
-          >
+            <div className="relative w-full h-full">
+              <img
+                src={getImageUrl(displayImage)}
+                alt={`${brand} ${model}`}
+                className="w-full h-full object-cover rounded"
+                onError={(e) => {
+                  e.target.style.display = 'none'
+                  e.target.nextSibling.style.display = 'flex'
+                }}
+              />
+              {/* Small default image indicator */}
+              {isDefaultImage && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border border-white" title={`${image_source === 'default_model' ? 'Reference' : image_source === 'default_brand' ? 'Brand' : 'Placeholder'} image`}></div>
+              )}
+              {/* Fallback for failed image loads */}
+              <div 
+                className="hidden w-full h-full flex items-center justify-center"
+                style={{ display: 'none' }}
+              >
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+          ) : (
             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-          </div>
+          )}
         </div>
 
         {/* Main Content - Two Row Layout */}
