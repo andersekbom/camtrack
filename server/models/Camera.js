@@ -11,7 +11,10 @@ class Camera {
         mechanicalStatus,
         cosmeticStatus,
         minPrice,
-        maxPrice
+        maxPrice,
+        sortBy,
+        sortOrder = 'asc',
+        priceType = 'weighted'
       } = options;
 
       let query = 'SELECT * FROM cameras';
@@ -60,7 +63,35 @@ class Camera {
       if (conditions.length > 0) {
         query += ' WHERE ' + conditions.join(' AND ');
       }
-      query += ' ORDER BY created_at DESC';
+
+      // Add sorting
+      let orderBy = 'created_at DESC'; // Default sort
+      
+      if (sortBy) {
+        const order = sortOrder.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+        
+        switch (sortBy) {
+          case 'name':
+            orderBy = `brand ${order}, model ${order}`;
+            break;
+          case 'price':
+            // Use the specified price type for sorting
+            const priceField = priceType === 'kamerastore' ? 'kamerastore_price' : 'weighted_price';
+            orderBy = `${priceField} ${order}`;
+            break;
+          case 'condition':
+            // Sort by average of mechanical and cosmetic status
+            orderBy = `((mechanical_status + cosmetic_status) / 2.0) ${order}`;
+            break;
+          case 'date':
+            orderBy = `created_at ${order}`;
+            break;
+          default:
+            orderBy = 'created_at DESC';
+        }
+      }
+      
+      query += ` ORDER BY ${orderBy}`;
 
       const stmt = db.prepare(query);
       const cameras = stmt.all(...params);

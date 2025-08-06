@@ -3,17 +3,28 @@ const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
 
+const { 
+  trackImagePerformance, 
+  addCacheHeaders, 
+  compressionHints, 
+  performanceMonitor 
+} = require('./middleware/performanceMiddleware');
+
 const app = express();
 
-// Middleware
+// Performance middleware (before other middleware)
+app.use(performanceMonitor);
+app.use(compressionHints);
+
+// Standard middleware
 app.use(cors());
 app.use(express.json());
 
-// Serve uploaded images statically
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+// Serve uploaded images statically with performance tracking
+app.use('/uploads', addCacheHeaders, trackImagePerformance, express.static(path.join(__dirname, '../uploads')));
 
-// Serve cached images statically
-app.use('/cached-images', express.static(path.join(__dirname, 'cached_images')));
+// Serve cached images statically with performance tracking
+app.use('/cached-images', addCacheHeaders, trackImagePerformance, express.static(path.join(__dirname, 'cached_images')));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -34,6 +45,15 @@ app.use('/api/cache', require('./routes/cache'));
 
 // Job Queue routes
 app.use('/api/jobs', require('./routes/jobs'));
+
+// Attribution routes
+app.use('/api/attribution', require('./routes/attribution'));
+
+// Performance routes
+app.use('/api/performance', require('./routes/performance'));
+
+// Image Proxy routes (for Wikipedia images)
+app.use('/api/image-proxy', require('./routes/imageProxy'));
 
 // Import/Export routes
 app.use('/api/export', require('./routes/importExport'));

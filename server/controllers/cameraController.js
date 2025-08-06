@@ -11,7 +11,10 @@ class CameraController {
         mechanicalStatus,
         cosmeticStatus,
         minPrice,
-        maxPrice
+        maxPrice,
+        sortBy,
+        sortOrder,
+        priceType
       } = req.query;
 
       // Parse filter parameters
@@ -45,6 +48,18 @@ class CameraController {
       
       if (maxPrice !== undefined && maxPrice !== '') {
         options.maxPrice = parseFloat(maxPrice);
+      }
+
+      if (sortBy) {
+        options.sortBy = sortBy;
+      }
+
+      if (sortOrder) {
+        options.sortOrder = sortOrder;
+      }
+
+      if (priceType) {
+        options.priceType = priceType;
       }
 
       const cameras = Camera.getAllCameras(options);
