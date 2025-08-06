@@ -24,9 +24,9 @@ const Summary = ({ refreshTrigger }) => {
   }, [refreshTrigger])
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('sv-SE', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'SEK'
     }).format(amount)
   }
 
@@ -120,23 +120,23 @@ const Summary = ({ refreshTrigger }) => {
             <h3 className="font-semibold text-gray-900 mb-2">Price Distribution</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-600">Under $100:</span>
+                <span className="text-gray-600">Under 1 000 kr:</span>
                 <span className="font-medium">{summary.priceRanges.under100}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">$100 - $300:</span>
+                <span className="text-gray-600">1 000 - 3 000 kr:</span>
                 <span className="font-medium">{summary.priceRanges.range100to300}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">$300 - $500:</span>
+                <span className="text-gray-600">3 000 - 5 000 kr:</span>
                 <span className="font-medium">{summary.priceRanges.range300to500}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">$500 - $1000:</span>
+                <span className="text-gray-600">5 000 - 10 000 kr:</span>
                 <span className="font-medium">{summary.priceRanges.range500to1000}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Over $1000:</span>
+                <span className="text-gray-600">Over 10 000 kr:</span>
                 <span className="font-medium">{summary.priceRanges.over1000}</span>
               </div>
             </div>

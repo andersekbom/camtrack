@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import './App.css'
 import CameraList from './components/CameraList'
 import CameraForm from './components/CameraForm'
@@ -7,10 +7,9 @@ import ConfirmDialog from './components/ConfirmDialog'
 import SearchBar from './components/SearchBar'
 import FilterPanel from './components/FilterPanel'
 import BrandFilter from './components/BrandFilter'
-import ImportExport from './components/ImportExport'
 import Summary from './components/Summary'
-import DefaultImagesAdmin from './components/DefaultImagesAdmin'
-import { createCamera, updateCamera, deleteCamera, clearAllCameras } from './services/api'
+import AdminSettings from './components/AdminSettings'
+import { createCamera, updateCamera, deleteCamera } from './services/api'
 
 function App() {
   const [currentView, setCurrentView] = useState('list')
@@ -23,8 +22,11 @@ function App() {
   const [showFilters, setShowFilters] = useState(false)
   const [viewMode, setViewMode] = useState('grid') // 'grid' or 'list'
   const [selectedBrand, setSelectedBrand] = useState('')
-  const [showClearConfirm, setShowClearConfirm] = useState(false)
-  const [showDefaultImagesAdmin, setShowDefaultImagesAdmin] = useState(false)
+  const [showAdminSettings, setShowAdminSettings] = useState(false)
+  const [showDetailModal, setShowDetailModal] = useState(false)
+  const [sortBy, setSortBy] = useState('date')
+  const [sortOrder, setSortOrder] = useState('desc')
+  const [priceType, setPriceType] = useState('weighted') // 'weighted' or 'kamerastore'
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode')
     return saved ? JSON.parse(saved) : false
@@ -37,11 +39,12 @@ function App() {
 
   const handleViewCamera = (camera) => {
     setSelectedCamera(camera)
-    setCurrentView('detail')
+    setShowDetailModal(true)
   }
 
   const handleEditCamera = (camera) => {
     setSelectedCamera(camera)
+    setShowDetailModal(false) // Close modal when editing
     setCurrentView('form')
   }
 
@@ -56,10 +59,14 @@ function App() {
         await deleteCamera(cameraToDelete.id)
         setRefreshTrigger(prev => prev + 1)
         setShowDeleteConfirm(false)
-        setCameraToDelete(null)
-        if (currentView === 'detail' && selectedCamera?.id === cameraToDelete.id) {
-          setCurrentView('list')
+        
+        // If we're deleting the camera being viewed in modal, close the modal
+        if (showDetailModal && selectedCamera?.id === cameraToDelete.id) {
+          setShowDetailModal(false)
+          setSelectedCamera(null)
         }
+        
+        setCameraToDelete(null)
       } catch (error) {
         console.error('Failed to delete camera:', error)
         alert('Failed to delete camera. Please try again.')
@@ -94,9 +101,23 @@ function App() {
   }
 
   const handleCloseDetail = () => {
-    setCurrentView('list')
+    setShowDetailModal(false)
     setSelectedCamera(null)
   }
+
+  // Handle Escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && showDetailModal) {
+        handleCloseDetail()
+      }
+    }
+
+    if (showDetailModal) {
+      document.addEventListener('keydown', handleEscape)
+      return () => document.removeEventListener('keydown', handleEscape)
+    }
+  }, [showDetailModal])
 
   const handleSearch = useCallback((term) => {
     setSearchTerm(term)
@@ -118,28 +139,17 @@ function App() {
     setSelectedBrand(brand)
   }, [])
 
-  const handleClearDatabase = () => {
-    setShowClearConfirm(true)
-  }
-
-  const confirmClearDatabase = async () => {
-    try {
-      const result = await clearAllCameras()
-      console.log('Clear database result:', result)
-      setRefreshTrigger(prev => prev + 1)
-      setShowClearConfirm(false)
-      setSelectedBrand('') // Reset brand filter
-      alert(`Database cleared successfully! Deleted ${result.deletedCount || 0} cameras.`)
-    } catch (error) {
-      console.error('Failed to clear database:', error)
-      console.error('Error details:', error.response?.data)
-      alert(`Failed to clear database: ${error.response?.data?.error || error.message}`)
+  const handleSortChange = (field) => {
+    if (sortBy === field) {
+      // If same field, toggle order
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
+    } else {
+      // If different field, set new field with ascending order
+      setSortBy(field)
+      setSortOrder('asc')
     }
   }
 
-  const cancelClearDatabase = () => {
-    setShowClearConfirm(false)
-  }
 
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode
@@ -151,7 +161,10 @@ function App() {
   const combinedFilters = {
     ...filters,
     search: searchTerm,
-    brand: selectedBrand
+    brand: selectedBrand,
+    sortBy: sortBy,
+    sortOrder: sortOrder,
+    priceType: priceType
   }
 
   const handleImportComplete = () => {
@@ -174,6 +187,37 @@ function App() {
               <span className="sm:hidden">CamTrack</span>
             </h1>
             <div className="flex gap-2 sm:gap-3">
+              {/* Add Camera Button */}
+              <button
+                onClick={handleAddCamera}
+                className="px-3 py-2 sm:px-4 text-sm sm:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all-smooth focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <span className="hidden sm:inline">Add Camera</span>
+                <span className="sm:hidden">+</span>
+              </button>
+              {/* Summary Button */}
+              <button
+                onClick={handleViewSummary}
+                className="px-3 py-2 sm:px-4 text-sm sm:text-base bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-all-smooth focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <span className="hidden sm:inline">Summary</span>
+                <span className="sm:hidden">📊</span>
+              </button>
+              {/* Admin Settings */}
+              <button
+                onClick={() => setShowAdminSettings(true)}
+                className={`p-2 rounded-md transition-all-smooth focus:outline-none focus:ring-2 ${
+                  darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 focus:ring-gray-500'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 focus:ring-gray-500'
+                }`}
+                title="Admin Settings"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
               {/* Dark Mode Toggle */}
               <button
                 onClick={toggleDarkMode}
@@ -194,37 +238,6 @@ function App() {
                   </svg>
                 )}
               </button>
-              {/* Dev/Testing Buttons - Only show in development */}
-              <button
-                onClick={() => setShowDefaultImagesAdmin(true)}
-                className="px-2 py-2 sm:px-3 text-xs sm:text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-all-smooth focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                title="Default Images Admin"
-              >
-                <span className="hidden sm:inline">Images</span>
-                <span className="sm:inline md:hidden">🖼️</span>
-              </button>
-              <button
-                onClick={handleClearDatabase}
-                className="px-2 py-2 sm:px-3 text-xs sm:text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-all-smooth focus:outline-none focus:ring-2 focus:ring-red-500"
-                title="Clear Database (Dev)"
-              >
-                <span className="hidden sm:inline">Clear DB</span>
-                <span className="sm:inline md:hidden">🗑️</span>
-              </button>
-              <button
-                onClick={handleViewSummary}
-                className="px-3 py-2 sm:px-4 text-sm sm:text-base bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-all-smooth focus:outline-none focus:ring-2 focus:ring-purple-500"
-              >
-                <span className="hidden sm:inline">Summary</span>
-                <span className="sm:hidden">📊</span>
-              </button>
-              <button
-                onClick={handleAddCamera}
-                className="px-3 py-2 sm:px-4 text-sm sm:text-base bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all-smooth focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <span className="hidden sm:inline">Add Camera</span>
-                <span className="sm:hidden">+</span>
-              </button>
             </div>
           </div>
         </div>
@@ -243,6 +256,99 @@ function App() {
                     darkMode={darkMode}
                   />
                 </div>
+                
+                {/* Sort Buttons */}
+                <div className="flex gap-2">
+                  <div className={`flex border rounded-lg transition-colors duration-200 ${
+                    darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'
+                  }`}>
+                    <button
+                      onClick={() => handleSortChange('date')}
+                      className={`px-3 py-2 rounded-l-lg text-sm transition-all-smooth ${
+                        sortBy === 'date'
+                          ? 'bg-blue-600 text-white'
+                          : darkMode 
+                            ? 'text-gray-300 hover:bg-gray-700' 
+                            : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                      title={`Sort by date added ${sortBy === 'date' ? (sortOrder === 'asc' ? '(Oldest-Newest)' : '(Newest-Oldest)') : ''}`}
+                    >
+                      📅 {sortBy === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </button>
+                    <button
+                      onClick={() => handleSortChange('name')}
+                      className={`px-3 py-2 text-sm transition-all-smooth ${
+                        sortBy === 'name'
+                          ? 'bg-blue-600 text-white'
+                          : darkMode 
+                            ? 'text-gray-300 hover:bg-gray-700' 
+                            : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                      title={`Sort alphabetically ${sortBy === 'name' ? (sortOrder === 'asc' ? '(A-Z)' : '(Z-A)') : ''}`}
+                    >
+                      A-Z {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </button>
+                    <button
+                      onClick={() => handleSortChange('price')}
+                      className={`px-3 py-2 text-sm transition-all-smooth ${
+                        sortBy === 'price'
+                          ? 'bg-blue-600 text-white'
+                          : darkMode 
+                            ? 'text-gray-300 hover:bg-gray-700' 
+                            : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                      title={`Sort by price ${sortBy === 'price' ? (sortOrder === 'asc' ? '(Low-High)' : '(High-Low)') : ''}`}
+                    >
+                      $ {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </button>
+                    <button
+                      onClick={() => handleSortChange('condition')}
+                      className={`px-3 py-2 rounded-r-lg text-sm transition-all-smooth ${
+                        sortBy === 'condition'
+                          ? 'bg-blue-600 text-white'
+                          : darkMode 
+                            ? 'text-gray-300 hover:bg-gray-700' 
+                            : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                      title={`Sort by condition ${sortBy === 'condition' ? (sortOrder === 'asc' ? '(Poor-Excellent)' : '(Excellent-Poor)') : ''}`}
+                    >
+                      ⭐ {sortBy === 'condition' && (sortOrder === 'asc' ? '↑' : '↓')}
+                    </button>
+                  </div>
+
+                  {/* Price Type Toggle */}
+                  <div className={`flex border rounded-lg transition-colors duration-200 ${
+                    darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'
+                  }`}>
+                    <button
+                      onClick={() => setPriceType('weighted')}
+                      className={`px-3 py-2 rounded-l-lg text-xs transition-all-smooth ${
+                        priceType === 'weighted'
+                          ? 'bg-green-600 text-white'
+                          : darkMode 
+                            ? 'text-gray-300 hover:bg-gray-700' 
+                            : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                      title="Show Weighted Price (condition-adjusted)"
+                    >
+                      Weighted
+                    </button>
+                    <button
+                      onClick={() => setPriceType('kamerastore')}
+                      className={`px-3 py-2 rounded-r-lg text-xs transition-all-smooth ${
+                        priceType === 'kamerastore'
+                          ? 'bg-green-600 text-white'
+                          : darkMode 
+                            ? 'text-gray-300 hover:bg-gray-700' 
+                            : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                      title="Show Kamerastore Price (original market price)"
+                    >
+                      Kamerastore
+                    </button>
+                  </div>
+                </div>
+
                 {/* View Mode Toggle */}
                 <div className={`flex border rounded-lg transition-colors duration-200 ${
                   darkMode ? 'bg-gray-800 border-gray-600' : 'bg-white border-gray-200'
@@ -284,7 +390,6 @@ function App() {
                 isOpen={showFilters}
                 onToggle={handleToggleFilters}
               />
-              <ImportExport onImportComplete={handleImportComplete} />
             </div>
 
             {/* Brand Filter */}
@@ -304,6 +409,7 @@ function App() {
               filters={combinedFilters}
               viewMode={viewMode}
               darkMode={darkMode}
+              priceType={priceType}
             />
           </div>
         )}
@@ -317,14 +423,6 @@ function App() {
           />
         )}
 
-        {currentView === 'detail' && selectedCamera && (
-          <CameraDetail
-            cameraId={selectedCamera.id}
-            onEdit={handleEditCamera}
-            onDelete={handleDeleteCamera}
-            onClose={handleCloseDetail}
-          />
-        )}
 
         {currentView === 'summary' && (
           <div className="space-y-6">
@@ -352,24 +450,41 @@ function App() {
           isDestructive={true}
         />
 
-        <ConfirmDialog
-          isOpen={showClearConfirm}
-          title="Clear Database"
-          message="Are you sure you want to delete ALL cameras from the database? This action cannot be undone and is intended for development/testing purposes only."
-          confirmText="Clear All"
-          cancelText="Cancel"
-          onConfirm={confirmClearDatabase}
-          onCancel={cancelClearDatabase}
-          isDestructive={true}
-        />
-
-        {/* Default Images Admin Modal */}
-        {showDefaultImagesAdmin && (
-          <DefaultImagesAdmin
-            onClose={() => setShowDefaultImagesAdmin(false)}
+        {/* Admin Settings Modal */}
+        {showAdminSettings && (
+          <AdminSettings
+            onClose={() => setShowAdminSettings(false)}
             darkMode={darkMode}
+            onImportComplete={handleImportComplete}
           />
         )}
+
+        {/* Camera Detail Modal */}
+        {showDetailModal && selectedCamera && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={handleCloseDetail}
+          >
+            <div 
+              className={`max-w-4xl w-full max-h-[90vh] overflow-hidden rounded-lg shadow-xl ${
+                darkMode ? 'bg-gray-800' : 'bg-white'
+              }`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="overflow-y-auto max-h-[90vh]">
+                <CameraDetail
+                  cameraId={selectedCamera.id}
+                  onEdit={handleEditCamera}
+                  onDelete={handleDeleteCamera}
+                  onClose={handleCloseDetail}
+                  darkMode={darkMode}
+                  isModal={true}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
       </main>
     </div>
   )

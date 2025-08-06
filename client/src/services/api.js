@@ -40,6 +40,19 @@ export const getCameras = async (filters = {}, signal) => {
     params.append('maxPrice', filters.maxPrice.toString())
   }
   
+  // Add sorting parameters
+  if (filters.sortBy) {
+    params.append('sortBy', filters.sortBy)
+  }
+  
+  if (filters.sortOrder) {
+    params.append('sortOrder', filters.sortOrder)
+  }
+
+  if (filters.priceType) {
+    params.append('priceType', filters.priceType)
+  }
+  
   const queryString = params.toString()
   const url = queryString ? `${BASE_URL}/cameras?${queryString}` : `${BASE_URL}/cameras`
   

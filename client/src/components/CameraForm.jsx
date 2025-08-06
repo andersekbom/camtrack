@@ -285,7 +285,7 @@ const CameraForm = ({ camera, onSubmit, onCancel, isEdit = false }) => {
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label htmlFor="kamerastore_price" className="block text-sm font-medium text-gray-700 mb-1">
-              Kamerastore Price ($)
+              Kamerastore Price (SEK)
             </label>
             <input
               type="number"
@@ -305,7 +305,7 @@ const CameraForm = ({ camera, onSubmit, onCancel, isEdit = false }) => {
 
           <div>
             <label htmlFor="sold_price" className="block text-sm font-medium text-gray-700 mb-1">
-              Sold Price ($)
+              Sold Price (SEK)
             </label>
             <input
               type="number"

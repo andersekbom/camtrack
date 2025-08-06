@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getCamera } from '../services/api'
 import StarRating from './StarRating'
 
-const CameraDetail = ({ cameraId, onEdit, onDelete, onClose }) => {
+const CameraDetail = ({ cameraId, onEdit, onDelete, onClose, darkMode = false, isModal = false }) => {
   const [camera, setCamera] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -27,10 +27,10 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose }) => {
   }, [cameraId])
 
   const formatPrice = (price) => {
-    if (!price) return '$0.00'
-    return new Intl.NumberFormat('en-US', {
+    if (!price) return '0 kr'
+    return new Intl.NumberFormat('sv-SE', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'SEK'
     }).format(price)
   }
 
@@ -60,9 +60,14 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null
     
-    // If it's a cached image or external URL, use as-is
-    if (imagePath.startsWith('http') || imagePath.startsWith('/cached-images/')) {
-      return imagePath
+    // If it's a Wikipedia URL, use our proxy to avoid CORS issues
+    if (imagePath.includes('wikimedia.org') || imagePath.includes('wikipedia.org')) {
+      return `http://localhost:3000/api/image-proxy?url=${encodeURIComponent(imagePath)}`
+    }
+    
+    // If it's a cached image, use the local server
+    if (imagePath.startsWith('/cached-images/')) {
+      return `http://localhost:3000${imagePath}`
     }
     
     // For local uploads, add the base URL
@@ -82,9 +87,11 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose }) => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className={`${isModal ? '' : 'rounded-lg shadow-md'} p-6 ${
+        darkMode ? 'bg-gray-800 text-white' : 'bg-white'
+      }`}>
         <div className="text-center py-8">
-          <div className="text-gray-500">Loading camera details...</div>
+          <div className={darkMode ? 'text-gray-300' : 'text-gray-500'}>Loading camera details...</div>
         </div>
       </div>
     )
@@ -92,12 +99,18 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose }) => {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className={`${isModal ? '' : 'rounded-lg shadow-md'} p-6 ${
+        darkMode ? 'bg-gray-800 text-white' : 'bg-white'
+      }`}>
         <div className="text-center py-8">
-          <div className="text-red-500">Error loading camera: {error}</div>
+          <div className={darkMode ? 'text-red-400' : 'text-red-500'}>Error loading camera: {error}</div>
           <button
             onClick={onClose}
-            className="mt-4 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+            className={`mt-4 px-4 py-2 rounded-md transition-colors ${
+              darkMode 
+                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+            }`}
           >
             Close
           </button>
@@ -108,12 +121,18 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose }) => {
 
   if (!camera) {
     return (
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div className={`${isModal ? '' : 'rounded-lg shadow-md'} p-6 ${
+        darkMode ? 'bg-gray-800 text-white' : 'bg-white'
+      }`}>
         <div className="text-center py-8">
-          <div className="text-gray-500">Camera not found</div>
+          <div className={darkMode ? 'text-gray-300' : 'text-gray-500'}>Camera not found</div>
           <button
             onClick={onClose}
-            className="mt-4 px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+            className={`mt-4 px-4 py-2 rounded-md transition-colors ${
+              darkMode 
+                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+            }`}
           >
             Close
           </button>
@@ -123,43 +142,55 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className={`${isModal ? '' : 'rounded-lg shadow-md'} p-6 ${
+      darkMode ? 'bg-gray-800 text-white' : 'bg-white'
+    }`}>
       {/* Header with actions */}
       <div className="flex justify-between items-start mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">
+          <h2 className={`text-3xl font-bold ${
+            darkMode ? 'text-white' : 'text-gray-900'
+          }`}>
             {camera.brand} {camera.model}
           </h2>
           {camera.serial && (
-            <p className="text-gray-600 mt-1">Serial: {camera.serial}</p>
+            <p className={`mt-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Serial: {camera.serial}
+            </p>
           )}
         </div>
         
         <div className="flex gap-2">
           <button
             onClick={() => onEdit(camera)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
           >
             Edit
           </button>
           <button
             onClick={() => onDelete(camera)}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors"
           >
             Delete
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className={`px-4 py-2 rounded-md transition-colors focus:outline-none focus:ring-2 ${
+              darkMode
+                ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 focus:ring-gray-500'
+                : 'bg-gray-300 text-gray-700 hover:bg-gray-400 focus:ring-gray-500'
+            }`}
           >
-            Close
+            {isModal ? '×' : 'Close'}
           </button>
         </div>
       </div>
 
       {/* Images Section */}
       <div className="mb-6">
-        <h3 className="text-xl font-semibold text-gray-900 mb-4">Images</h3>
+        <h3 className={`text-xl font-semibold mb-4 ${
+          darkMode ? 'text-white' : 'text-gray-900'
+        }`}>Images</h3>
         
         {/* User uploaded images */}
         {(camera.image1_path || camera.image2_path) && (
@@ -292,7 +323,7 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose }) => {
       <div className="grid md:grid-cols-2 gap-6">
         {/* Condition Status */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-900">Condition</h3>
+          <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Condition</h3>
           
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="grid grid-cols-2 gap-4">
@@ -315,7 +346,7 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose }) => {
 
         {/* Pricing Information */}
         <div className="space-y-4">
-          <h3 className="text-xl font-semibold text-gray-900">Pricing</h3>
+          <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Pricing</h3>
           
           <div className="bg-gray-50 p-4 rounded-lg space-y-3">
             <div className="flex justify-between">
@@ -341,16 +372,16 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose }) => {
       {/* Comment section */}
       {camera.comment && (
         <div className="mt-6">
-          <h3 className="text-xl font-semibold text-gray-900 mb-3">Notes</h3>
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-gray-700 whitespace-pre-wrap">{camera.comment}</p>
+          <h3 className={`text-xl font-semibold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Notes</h3>
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-50'}`}>
+            <p className={`whitespace-pre-wrap ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{camera.comment}</p>
           </div>
         </div>
       )}
 
       {/* Additional metadata */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <div className="text-sm text-gray-500 space-y-1">
+      <div className={`mt-6 pt-6 border-t ${darkMode ? 'border-gray-600' : 'border-gray-200'}`}>
+        <div className={`text-sm space-y-1 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           {camera.created_at && (
             <div>Added: {new Date(camera.created_at).toLocaleDateString()}</div>
           )}

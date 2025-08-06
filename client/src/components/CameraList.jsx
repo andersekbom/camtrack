@@ -4,7 +4,7 @@ import CameraCard from './CameraCard'
 import CameraListItem from './CameraListItem'
 import LoadingSpinner from './LoadingSpinner'
 
-const CameraList = ({ onView, onEdit, onDelete, refreshTrigger, filters = {}, viewMode = 'grid', darkMode = false }) => {
+const CameraList = ({ onView, onEdit, onDelete, refreshTrigger, filters = {}, viewMode = 'grid', darkMode = false, priceType = 'weighted' }) => {
   const [cameras, setCameras] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -64,6 +64,7 @@ const CameraList = ({ onView, onEdit, onDelete, refreshTrigger, filters = {}, vi
               camera={camera} 
               onView={onView}
               darkMode={darkMode}
+              priceType={priceType}
             />
           </div>
         ))}
@@ -85,6 +86,7 @@ const CameraList = ({ onView, onEdit, onDelete, refreshTrigger, filters = {}, vi
             onEdit={onEdit}
             onDelete={onDelete}
             darkMode={darkMode}
+            priceType={priceType}
           />
         </div>
       ))}

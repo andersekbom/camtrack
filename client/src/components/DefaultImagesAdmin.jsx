@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-const DefaultImagesAdmin = ({ onClose, darkMode = false }) => {
+const DefaultImagesAdmin = ({ onClose, darkMode = false, inline = false }) => {
   const [defaultImages, setDefaultImages] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -88,6 +88,24 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false }) => {
     }
   }
 
+  // Helper function to build proper image URLs
+  const getImageUrl = (imagePath) => {
+    if (!imagePath) return null
+    
+    // If it's a Wikipedia URL, use our proxy to avoid CORS issues
+    if (imagePath.includes('wikimedia.org') || imagePath.includes('wikipedia.org')) {
+      return `http://localhost:3000/api/image-proxy?url=${encodeURIComponent(imagePath)}`
+    }
+    
+    // If it's a cached image, use the local server
+    if (imagePath.startsWith('/cached-images/')) {
+      return `http://localhost:3000${imagePath}`
+    }
+    
+    // For local uploads, add the base URL if needed
+    return imagePath.startsWith('/') ? `http://localhost:3000${imagePath}` : imagePath
+  }
+
   const handleSearchWikipedia = async (brand, model) => {
     try {
       const response = await fetch(
@@ -122,6 +140,13 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false }) => {
   )
 
   if (loading) {
+    if (inline) {
+      return (
+        <div className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-white'} p-6`}>
+          <div className="text-center">Loading default images...</div>
+        </div>
+      )
+    }
     return (
       <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50`}>
         <div className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-white'} rounded-lg p-6 max-w-md w-full mx-4`}>
@@ -131,16 +156,201 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false }) => {
     )
   }
 
+  const content = (
+    <>
+      {error && (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+          {error}
+        </div>
+      )}
+
+      {/* Controls */}
+      <div className="mb-6 flex gap-4 items-center flex-wrap">
+        <input
+          type="text"
+          placeholder="Search by brand or model..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className={`flex-1 min-w-64 px-3 py-2 border rounded-md ${
+            darkMode 
+              ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+              : 'border-gray-300'
+          }`}
+        />
+        <button
+          onClick={() => setShowAddForm(!showAddForm)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        >
+          {showAddForm ? 'Cancel' : 'Add New Image'}
+        </button>
+        <button
+          onClick={fetchDefaultImages}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {/* Add New Image Form */}
+      {showAddForm && (
+        <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg mb-6`}>
+          <h3 className="text-lg font-semibold mb-4">Add New Default Image</h3>
+          <form onSubmit={handleAddImage} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Brand *"
+              value={newImage.brand}
+              onChange={(e) => setNewImage(prev => ({ ...prev, brand: e.target.value }))}
+              className={`px-3 py-2 border rounded-md ${
+                darkMode 
+                  ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
+                  : 'border-gray-300'
+              }`}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Model *"
+              value={newImage.model}
+              onChange={(e) => setNewImage(prev => ({ ...prev, model: e.target.value }))}
+              className={`px-3 py-2 border rounded-md ${
+                darkMode 
+                  ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
+                  : 'border-gray-300'
+              }`}
+              required
+            />
+            <input
+              type="url"
+              placeholder="Image URL *"
+              value={newImage.imageUrl}
+              onChange={(e) => setNewImage(prev => ({ ...prev, imageUrl: e.target.value }))}
+              className={`px-3 py-2 border rounded-md ${
+                darkMode 
+                  ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
+                  : 'border-gray-300'
+              }`}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Source"
+              value={newImage.source}
+              onChange={(e) => setNewImage(prev => ({ ...prev, source: e.target.value }))}
+              className={`px-3 py-2 border rounded-md ${
+                darkMode 
+                  ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
+                  : 'border-gray-300'
+              }`}
+            />
+            <input
+              type="text"
+              placeholder="Attribution"
+              value={newImage.attribution}
+              onChange={(e) => setNewImage(prev => ({ ...prev, attribution: e.target.value }))}
+              className={`px-3 py-2 border rounded-md md:col-span-1 ${
+                darkMode 
+                  ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
+                  : 'border-gray-300'
+              }`}
+            />
+            <div className="md:col-span-2 flex gap-2">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+              >
+                {submitting ? 'Adding...' : 'Add Image'}
+              </button>
+              {newImage.brand && newImage.model && (
+                <button
+                  type="button"
+                  onClick={() => handleSearchWikipedia(newImage.brand, newImage.model)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                >
+                  Search Wikipedia
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Images List */}
+      <div className="space-y-4">
+        <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+          Showing {filteredImages.length} of {defaultImages.length} default images
+        </div>
+        
+        {filteredImages.map(image => (
+          <div
+            key={image.id}
+            className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg flex items-start gap-4`}
+          >
+            <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden flex items-center justify-center">
+              <img
+                src={getImageUrl(image.image_url)}
+                alt={`${image.brand} ${image.model}`}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none'
+                  e.target.nextSibling.style.display = 'flex'
+                }}
+              />
+              {/* Fallback for failed image loads */}
+              <div className="hidden w-full h-full flex items-center justify-center text-gray-400">
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            </div>
+            <div className="flex-1">
+              <h4 className="font-semibold text-lg">{image.brand} {image.model}</h4>
+              <div className="text-sm text-gray-500 space-y-1">
+                <div>Source: {image.source}</div>
+                {image.source_attribution && (
+                  <div>Attribution: {image.source_attribution}</div>
+                )}
+                {image.image_quality && (
+                  <div>Quality: {image.image_quality}/10</div>
+                )}
+                <div>Created: {new Date(image.created_at).toLocaleDateString()}</div>
+              </div>
+            </div>
+            <button
+              onClick={() => handleDeleteImage(image.id)}
+              className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+            >
+              Delete
+            </button>
+          </div>
+        ))}
+
+        {filteredImages.length === 0 && (
+          <div className="text-center text-gray-500 py-8">
+            {searchTerm ? 'No images found matching your search.' : 'No default images available.'}
+          </div>
+        )}
+      </div>
+    </>
+  )
+
+  if (inline) {
+    return content
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-white'} rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden`}>
         {/* Header */}
-        <div className="p-6 border-b border-gray-200">
+        <div className={`p-6 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Default Images Management</h2>
             <button
               onClick={onClose}
-              className="text-gray-500 hover:text-gray-700 text-2xl"
+              className={`text-gray-500 hover:text-gray-700 text-2xl ${
+                darkMode ? 'text-gray-400 hover:text-gray-200' : ''
+              }`}
             >
               ×
             </button>
@@ -149,171 +359,7 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false }) => {
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-          {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
-            </div>
-          )}
-
-          {/* Controls */}
-          <div className="mb-6 flex gap-4 items-center flex-wrap">
-            <input
-              type="text"
-              placeholder="Search by brand or model..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={`flex-1 min-w-64 px-3 py-2 border rounded-md ${
-                darkMode 
-                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                  : 'border-gray-300'
-              }`}
-            />
-            <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              {showAddForm ? 'Cancel' : 'Add New Image'}
-            </button>
-            <button
-              onClick={fetchDefaultImages}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-            >
-              Refresh
-            </button>
-          </div>
-
-          {/* Add New Image Form */}
-          {showAddForm && (
-            <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg mb-6`}>
-              <h3 className="text-lg font-semibold mb-4">Add New Default Image</h3>
-              <form onSubmit={handleAddImage} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  placeholder="Brand *"
-                  value={newImage.brand}
-                  onChange={(e) => setNewImage(prev => ({ ...prev, brand: e.target.value }))}
-                  className={`px-3 py-2 border rounded-md ${
-                    darkMode 
-                      ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
-                      : 'border-gray-300'
-                  }`}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Model *"
-                  value={newImage.model}
-                  onChange={(e) => setNewImage(prev => ({ ...prev, model: e.target.value }))}
-                  className={`px-3 py-2 border rounded-md ${
-                    darkMode 
-                      ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
-                      : 'border-gray-300'
-                  }`}
-                  required
-                />
-                <input
-                  type="url"
-                  placeholder="Image URL *"
-                  value={newImage.imageUrl}
-                  onChange={(e) => setNewImage(prev => ({ ...prev, imageUrl: e.target.value }))}
-                  className={`px-3 py-2 border rounded-md ${
-                    darkMode 
-                      ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
-                      : 'border-gray-300'
-                  }`}
-                  required
-                />
-                <input
-                  type="text"
-                  placeholder="Source"
-                  value={newImage.source}
-                  onChange={(e) => setNewImage(prev => ({ ...prev, source: e.target.value }))}
-                  className={`px-3 py-2 border rounded-md ${
-                    darkMode 
-                      ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
-                      : 'border-gray-300'
-                  }`}
-                />
-                <input
-                  type="text"
-                  placeholder="Attribution"
-                  value={newImage.attribution}
-                  onChange={(e) => setNewImage(prev => ({ ...prev, attribution: e.target.value }))}
-                  className={`px-3 py-2 border rounded-md md:col-span-1 ${
-                    darkMode 
-                      ? 'bg-gray-600 border-gray-500 text-white placeholder-gray-400' 
-                      : 'border-gray-300'
-                  }`}
-                />
-                <div className="md:col-span-2 flex gap-2">
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-                  >
-                    {submitting ? 'Adding...' : 'Add Image'}
-                  </button>
-                  {newImage.brand && newImage.model && (
-                    <button
-                      type="button"
-                      onClick={() => handleSearchWikipedia(newImage.brand, newImage.model)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                    >
-                      Search Wikipedia
-                    </button>
-                  )}
-                </div>
-              </form>
-            </div>
-          )}
-
-          {/* Images List */}
-          <div className="space-y-4">
-            <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              Showing {filteredImages.length} of {defaultImages.length} default images
-            </div>
-            
-            {filteredImages.map(image => (
-              <div
-                key={image.id}
-                className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg flex items-start gap-4`}
-              >
-                <img
-                  src={image.image_url}
-                  alt={`${image.brand} ${image.model}`}
-                  className="w-16 h-16 object-cover rounded"
-                  onError={(e) => {
-                    e.target.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="gray"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>'
-                  }}
-                />
-                <div className="flex-1">
-                  <h4 className="font-semibold text-lg">{image.brand} {image.model}</h4>
-                  <div className="text-sm text-gray-500 space-y-1">
-                    <div>Source: {image.source}</div>
-                    {image.source_attribution && (
-                      <div>Attribution: {image.source_attribution}</div>
-                    )}
-                    {image.image_quality && (
-                      <div>Quality: {image.image_quality}/10</div>
-                    )}
-                    <div>Created: {new Date(image.created_at).toLocaleDateString()}</div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleDeleteImage(image.id)}
-                  className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-                >
-                  Delete
-                </button>
-              </div>
-            ))}
-
-            {filteredImages.length === 0 && (
-              <div className="text-center text-gray-500 py-8">
-                {searchTerm ? 'No images found matching your search.' : 'No default images available.'}
-              </div>
-            )}
-          </div>
+          {content}
         </div>
       </div>
     </div>

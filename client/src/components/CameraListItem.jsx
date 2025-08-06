@@ -1,6 +1,6 @@
 import StarRating from './StarRating'
 
-const CameraListItem = ({ camera, onView }) => {
+const CameraListItem = ({ camera, onView, priceType = 'weighted' }) => {
   const {
     brand,
     model,
@@ -8,6 +8,7 @@ const CameraListItem = ({ camera, onView }) => {
     mechanical_status,
     cosmetic_status,
     weighted_price,
+    kamerastore_price,
     comment,
     image1_path,
     image2_path,
@@ -16,11 +17,14 @@ const CameraListItem = ({ camera, onView }) => {
     image_source
   } = camera
 
+  // Select price based on priceType
+  const displayPrice = priceType === 'kamerastore' ? kamerastore_price : weighted_price
+
   const formatPrice = (price) => {
-    if (!price) return '$0.00'
-    return new Intl.NumberFormat('en-US', {
+    if (!price) return '0 kr'
+    return new Intl.NumberFormat('sv-SE', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'SEK'
     }).format(price)
   }
 
@@ -33,9 +37,14 @@ const CameraListItem = ({ camera, onView }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return null
     
-    // If it's a cached image or external URL, use as-is
-    if (imagePath.startsWith('http') || imagePath.startsWith('/cached-images/')) {
-      return imagePath
+    // If it's a Wikipedia URL, use our proxy to avoid CORS issues
+    if (imagePath.includes('wikimedia.org') || imagePath.includes('wikipedia.org')) {
+      return `http://localhost:3000/api/image-proxy?url=${encodeURIComponent(imagePath)}`
+    }
+    
+    // If it's a cached image, use the local server
+    if (imagePath.startsWith('/cached-images/')) {
+      return `http://localhost:3000${imagePath}`
     }
     
     // For local uploads, add the base URL
@@ -107,7 +116,7 @@ const CameraListItem = ({ camera, onView }) => {
               </div>
               {/* Price */}
               <div className="text-base font-bold text-green-600">
-                {formatPrice(weighted_price)}
+                {formatPrice(displayPrice)}
               </div>
             </div>
           </div>
