@@ -48,12 +48,30 @@ export const getCamera = async (id) => {
 }
 
 export const createCamera = async (cameraData) => {
-  const response = await axios.post(`${BASE_URL}/cameras`, cameraData)
+  const config = {}
+  
+  // If cameraData is FormData (for file uploads), set proper headers
+  if (cameraData instanceof FormData) {
+    config.headers = {
+      'Content-Type': 'multipart/form-data'
+    }
+  }
+  
+  const response = await axios.post(`${BASE_URL}/cameras`, cameraData, config)
   return response.data
 }
 
 export const updateCamera = async (id, updates) => {
-  const response = await axios.put(`${BASE_URL}/cameras/${id}`, updates)
+  const config = {}
+  
+  // If updates is FormData (for file uploads), set proper headers
+  if (updates instanceof FormData) {
+    config.headers = {
+      'Content-Type': 'multipart/form-data'
+    }
+  }
+  
+  const response = await axios.put(`${BASE_URL}/cameras/${id}`, updates, config)
   return response.data
 }
 

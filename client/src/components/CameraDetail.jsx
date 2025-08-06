@@ -132,6 +132,49 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose }) => {
         </div>
       </div>
 
+      {/* Images Section */}
+      {(camera.image1_path || camera.image2_path) && (
+        <div className="mb-6">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Images</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {camera.image1_path && (
+              <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                <img
+                  src={`http://localhost:3000/${camera.image1_path}`}
+                  alt={`${camera.brand} ${camera.model} - Image 1`}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                  onClick={(e) => {
+                    // Simple image modal - could be enhanced with a proper modal component
+                    const modal = document.createElement('div')
+                    modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 cursor-pointer'
+                    modal.innerHTML = `<img src="${e.target.src}" class="max-w-full max-h-full object-contain" />`
+                    modal.onclick = () => document.body.removeChild(modal)
+                    document.body.appendChild(modal)
+                  }}
+                />
+              </div>
+            )}
+            {camera.image2_path && (
+              <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                <img
+                  src={`http://localhost:3000/${camera.image2_path}`}
+                  alt={`${camera.brand} ${camera.model} - Image 2`}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                  onClick={(e) => {
+                    // Simple image modal - could be enhanced with a proper modal component
+                    const modal = document.createElement('div')
+                    modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 cursor-pointer'
+                    modal.innerHTML = `<img src="${e.target.src}" class="max-w-full max-h-full object-contain" />`
+                    modal.onclick = () => document.body.removeChild(modal)
+                    document.body.appendChild(modal)
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Camera details grid */}
       <div className="grid md:grid-cols-2 gap-6">
         {/* Condition Status */}

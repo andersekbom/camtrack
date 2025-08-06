@@ -15,6 +15,14 @@ const CameraForm = ({ camera, onSubmit, onCancel, isEdit = false }) => {
   
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [images, setImages] = useState({
+    image1: null,
+    image2: null
+  })
+  const [imagePreviews, setImagePreviews] = useState({
+    image1: initCamera.image1_path ? `http://localhost:3000/${initCamera.image1_path}` : null,
+    image2: initCamera.image2_path ? `http://localhost:3000/${initCamera.image2_path}` : null
+  })
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -28,6 +36,71 @@ const CameraForm = ({ camera, onSubmit, onCancel, isEdit = false }) => {
         ...prev,
         [name]: ''
       }))
+    }
+  }
+
+  const handleImageChange = (e, imageKey) => {
+    const file = e.target.files[0]
+    
+    if (file) {
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(prev => ({
+          ...prev,
+          [imageKey]: 'Image must be smaller than 5MB'
+        }))
+        return
+      }
+      
+      // Validate file type
+      if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+        setErrors(prev => ({
+          ...prev,
+          [imageKey]: 'Only JPEG and PNG files are allowed'
+        }))
+        return
+      }
+      
+      // Clear any previous error
+      if (errors[imageKey]) {
+        setErrors(prev => ({
+          ...prev,
+          [imageKey]: ''
+        }))
+      }
+      
+      // Store the file
+      setImages(prev => ({
+        ...prev,
+        [imageKey]: file
+      }))
+      
+      // Create preview
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreviews(prev => ({
+          ...prev,
+          [imageKey]: e.target.result
+        }))
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const removeImage = (imageKey) => {
+    setImages(prev => ({
+      ...prev,
+      [imageKey]: null
+    }))
+    setImagePreviews(prev => ({
+      ...prev,
+      [imageKey]: null
+    }))
+    
+    // Clear file input
+    const fileInput = document.getElementById(imageKey)
+    if (fileInput) {
+      fileInput.value = ''
     }
   }
 
@@ -72,22 +145,28 @@ const CameraForm = ({ camera, onSubmit, onCancel, isEdit = false }) => {
     setIsSubmitting(true)
     
     try {
-      const submitData = { ...formData }
+      // Create FormData for multipart form submission
+      const formDataToSubmit = new FormData()
       
-      if (submitData.mechanical_status) {
-        submitData.mechanical_status = parseInt(submitData.mechanical_status)
+      // Add form fields
+      formDataToSubmit.append('brand', formData.brand)
+      formDataToSubmit.append('model', formData.model)
+      if (formData.serial) formDataToSubmit.append('serial', formData.serial)
+      if (formData.mechanical_status) formDataToSubmit.append('mechanical_status', parseInt(formData.mechanical_status))
+      if (formData.cosmetic_status) formDataToSubmit.append('cosmetic_status', parseInt(formData.cosmetic_status))
+      if (formData.kamerastore_price) formDataToSubmit.append('kamerastore_price', parseFloat(formData.kamerastore_price))
+      if (formData.sold_price) formDataToSubmit.append('sold_price', parseFloat(formData.sold_price))
+      if (formData.comment) formDataToSubmit.append('comment', formData.comment)
+      
+      // Add image files
+      if (images.image1) {
+        formDataToSubmit.append('image1', images.image1)
       }
-      if (submitData.cosmetic_status) {
-        submitData.cosmetic_status = parseInt(submitData.cosmetic_status)
-      }
-      if (submitData.kamerastore_price) {
-        submitData.kamerastore_price = parseFloat(submitData.kamerastore_price)
-      }
-      if (submitData.sold_price) {
-        submitData.sold_price = parseFloat(submitData.sold_price)
+      if (images.image2) {
+        formDataToSubmit.append('image2', images.image2)
       }
 
-      await onSubmit(submitData)
+      await onSubmit(formDataToSubmit)
     } catch (error) {
       console.error('Form submission error:', error)
     } finally {
@@ -258,6 +337,103 @@ const CameraForm = ({ camera, onSubmit, onCancel, isEdit = false }) => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="Additional notes about the camera..."
           />
+        </div>
+
+        {/* Image Upload Section */}
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Images (Optional)</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Image 1 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Image 1
+              </label>
+              <div className="space-y-3">
+                {imagePreviews.image1 ? (
+                  <div className="relative">
+                    <img
+                      src={imagePreviews.image1}
+                      alt="Camera preview 1"
+                      className="w-full h-48 object-cover border border-gray-300 rounded-md"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage('image1')}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 focus:outline-none"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-full h-48 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
+                    <div className="text-center">
+                      <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <p className="mt-2 text-sm text-gray-500">No image selected</p>
+                    </div>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  id="image1"
+                  accept="image/jpeg,image/jpg,image/png"
+                  onChange={(e) => handleImageChange(e, 'image1')}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {errors.image1 && <p className="text-red-500 text-sm">{errors.image1}</p>}
+              </div>
+            </div>
+
+            {/* Image 2 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Image 2
+              </label>
+              <div className="space-y-3">
+                {imagePreviews.image2 ? (
+                  <div className="relative">
+                    <img
+                      src={imagePreviews.image2}
+                      alt="Camera preview 2"
+                      className="w-full h-48 object-cover border border-gray-300 rounded-md"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage('image2')}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 focus:outline-none"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-full h-48 border-2 border-dashed border-gray-300 rounded-md flex items-center justify-center">
+                    <div className="text-center">
+                      <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <p className="mt-2 text-sm text-gray-500">No image selected</p>
+                    </div>
+                  </div>
+                )}
+                <input
+                  type="file"
+                  id="image2"
+                  accept="image/jpeg,image/jpg,image/png"
+                  onChange={(e) => handleImageChange(e, 'image2')}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {errors.image2 && <p className="text-red-500 text-sm">{errors.image2}</p>}
+              </div>
+            </div>
+          </div>
+          <p className="mt-2 text-sm text-gray-500">
+            Maximum 2 images, 5MB each. JPEG and PNG formats only.
+          </p>
         </div>
 
         <div className="flex gap-3 pt-4">
