@@ -252,6 +252,31 @@ The project is ready for production deployment and real-world use by vintage cam
 - [ ] Export to additional formats (PDF, Excel)
 - [ ] Advanced inventory management features
 
+## API Documentation
+
+### Interactive Documentation
+- **Swagger UI**: `http://localhost:3000/api/docs` - Interactive API explorer with try-it-out functionality
+- **Redoc**: `http://localhost:3000/api/docs/redoc` - Clean, readable documentation format
+
+### Downloadable Specifications
+- **OpenAPI JSON**: `http://localhost:3000/api/docs/openapi.json` - For API clients and code generation
+- **OpenAPI YAML**: `http://localhost:3000/api/docs/openapi.yaml` - Human-readable specification
+- **Markdown**: `http://localhost:3000/api/docs/markdown` - Comprehensive markdown documentation
+
+### Access from Application
+API documentation is accessible through the Admin Settings page:
+1. Click the settings gear icon in the top right
+2. Navigate to the "API Documentation" tab
+3. Choose from interactive explorer, clean docs, or downloadable specs
+
+The documentation is fully integrated with the application and provides:
+- Complete endpoint coverage (15 endpoints across 9 functional areas)
+- Interactive testing capabilities
+- Request/response examples
+- Schema validation
+- Error handling documentation
+- Usage examples in multiple programming languages
+
 ## Testing Tools
 
 - Use the Puppeteer tool to test the GUI parts of the project.

@@ -62,4 +62,10 @@ app.use('/api/import', require('./routes/importExport'));
 // Summary routes
 app.use('/api/summary', require('./routes/summary'));
 
+// API Documentation routes
+app.use('/api/docs', require('./routes/docs'));
+
+// Help and User Guide routes
+app.use('/api/help', require('./routes/help'));
+
 module.exports = app;

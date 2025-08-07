@@ -7,7 +7,8 @@
     "stop": "./stop-dev.sh",
     "test-frontend": "node test-frontend.js"
   },
-  "dependencies": {
-    "puppeteer": "^24.15.0"
+  "devDependencies": {
+    "@playwright/test": "^1.54.2",
+    "puppeteer": "^24.16.0"
   }
 }

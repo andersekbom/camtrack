@@ -8,6 +8,7 @@ const AdminSettings = ({ onClose, darkMode = false, onImportComplete }) => {
   const tabs = [
     { id: 'import-export', label: 'Import / Export', icon: '📁' },
     { id: 'default-images', label: 'Default Images', icon: '🖼️' },
+    { id: 'api-docs', label: 'API Documentation', icon: '📖' },
     { id: 'database', label: 'Database', icon: '🗄️' }
   ]
 
@@ -106,6 +107,145 @@ const AdminSettings = ({ onClose, darkMode = false, onImportComplete }) => {
               {/* Default Images Admin will be rendered inline */}
               <div className="border rounded-lg overflow-hidden">
                 <DefaultImagesAdmin onClose={() => {}} darkMode={darkMode} inline={true} />
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'api-docs' && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-4">API Documentation</h3>
+                <p className={`text-sm mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Comprehensive API documentation for developers and integration purposes.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Interactive Swagger UI */}
+                <div className={`${darkMode ? 'bg-gray-700' : 'bg-blue-50'} border ${darkMode ? 'border-gray-600' : 'border-blue-200'} rounded-lg p-6`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white text-lg">🚀</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">Interactive API Explorer</h4>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-blue-700'}`}>Swagger UI</p>
+                    </div>
+                  </div>
+                  <p className={`text-sm mb-4 ${darkMode ? 'text-gray-300' : 'text-blue-700'}`}>
+                    Try out API endpoints directly in your browser with the interactive Swagger interface.
+                  </p>
+                  <a
+                    href="http://localhost:3000/api/docs"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
+                  >
+                    <span>Open API Explorer</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
+
+                {/* Alternative Redoc View */}
+                <div className={`${darkMode ? 'bg-gray-700' : 'bg-green-50'} border ${darkMode ? 'border-gray-600' : 'border-green-200'} rounded-lg p-6`}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white text-lg">📚</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">Documentation View</h4>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-green-700'}`}>Redoc Format</p>
+                    </div>
+                  </div>
+                  <p className={`text-sm mb-4 ${darkMode ? 'text-gray-300' : 'text-green-700'}`}>
+                    Clean, readable documentation format optimized for browsing and reference.
+                  </p>
+                  <a
+                    href="http://localhost:3000/api/docs/redoc"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
+                  >
+                    <span>View Documentation</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+
+              <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-6`}>
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  <span>📥</span>
+                  Download API Specification
+                </h4>
+                <p className={`text-sm mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  Download the OpenAPI specification in different formats for integration with other tools.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <a
+                    href="http://localhost:3000/api/docs/openapi.json"
+                    download="camtracker-api-spec.json"
+                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border transition-colors ${
+                      darkMode 
+                        ? 'border-gray-600 text-gray-300 hover:bg-gray-600' 
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span>📄</span>
+                    <span>JSON Format</span>
+                  </a>
+                  <a
+                    href="http://localhost:3000/api/docs/openapi.yaml"
+                    download="camtracker-api-spec.yaml"
+                    className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border transition-colors ${
+                      darkMode 
+                        ? 'border-gray-600 text-gray-300 hover:bg-gray-600' 
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span>📝</span>
+                    <span>YAML Format</span>
+                  </a>
+                </div>
+              </div>
+
+              <div className={`${darkMode ? 'bg-gray-700' : 'bg-purple-50'} border ${darkMode ? 'border-gray-600' : 'border-purple-200'} rounded-lg p-6`}>
+                <h4 className="font-semibold mb-4 flex items-center gap-2">
+                  <span>🧪</span>
+                  Testing Resources
+                </h4>
+                <p className={`text-sm mb-4 ${darkMode ? 'text-gray-300' : 'text-purple-700'}`}>
+                  Additional resources for testing and developing with the CamTracker API.
+                </p>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-purple-700'}`}>
+                      📮 Postman Collection
+                    </span>
+                    <span className={`text-xs px-2 py-1 rounded ${darkMode ? 'bg-gray-600 text-gray-300' : 'bg-purple-100 text-purple-600'}`}>
+                      Available in /postman/
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-purple-700'}`}>
+                      🧪 Test Suite
+                    </span>
+                    <span className={`text-xs px-2 py-1 rounded ${darkMode ? 'bg-gray-600 text-gray-300' : 'bg-purple-100 text-purple-600'}`}>
+                      npm test
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-purple-700'}`}>
+                      📊 Sample Data
+                    </span>
+                    <span className={`text-xs px-2 py-1 rounded ${darkMode ? 'bg-gray-600 text-gray-300' : 'bg-purple-100 text-purple-600'}`}>
+                      sample-cameras.csv
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           )}

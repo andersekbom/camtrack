@@ -1,0 +1,540 @@
+{
+	"info": {
+		"_postman_id": "camtrack-deluxe-api",
+		"name": "CamTracker Deluxe API",
+		"description": "Complete API collection for CamTracker Deluxe - A vintage analog camera collection management system",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "camtrack-deluxe"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "health"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Cameras",
+			"item": [
+				{
+					"name": "Get All Cameras",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Cameras with Search",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras?search=Nikon",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras"],
+							"query": [
+								{
+									"key": "search",
+									"value": "Nikon"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Cameras with Filters",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras?minPrice=100&maxPrice=500&condition=4",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras"],
+							"query": [
+								{
+									"key": "minPrice",
+									"value": "100"
+								},
+								{
+									"key": "maxPrice",
+									"value": "500"
+								},
+								{
+									"key": "condition",
+									"value": "4"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Camera",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras/{{cameraId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras", "{{cameraId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Camera",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('cameraId', responseJson.id);",
+									"    pm.test('Camera created successfully', function () {",
+									"        pm.expect(responseJson).to.have.property('id');",
+									"        pm.expect(responseJson.brand).to.eql('Nikon');",
+									"        pm.expect(responseJson.model).to.eql('F50');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"brand\": \"Nikon\",\n    \"model\": \"F50\",\n    \"serial\": \"2922618\",\n    \"mechanical_status\": 5,\n    \"cosmetic_status\": 4,\n    \"kamerastore_price\": 600,\n    \"sold_price\": 540,\n    \"comment\": \"Excellent condition camera with original box\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Camera with Images",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "brand",
+									"value": "Canon",
+									"type": "text"
+								},
+								{
+									"key": "model",
+									"value": "AE-1",
+									"type": "text"
+								},
+								{
+									"key": "serial",
+									"value": "1234567",
+									"type": "text"
+								},
+								{
+									"key": "mechanical_status",
+									"value": "4",
+									"type": "text"
+								},
+								{
+									"key": "cosmetic_status",
+									"value": "3",
+									"type": "text"
+								},
+								{
+									"key": "kamerastore_price",
+									"value": "150",
+									"type": "text"
+								},
+								{
+									"key": "comment",
+									"value": "Classic 35mm SLR",
+									"type": "text"
+								},
+								{
+									"key": "image1",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								},
+								{
+									"key": "image2",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Camera",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"comment\": \"Updated comment - excellent condition\",\n    \"mechanical_status\": 5,\n    \"sold_price\": 580\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras/{{cameraId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras", "{{cameraId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Camera",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras/{{cameraId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras", "{{cameraId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Clear All Cameras (Dev)",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras/clear",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras", "clear"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Summary & Statistics",
+			"item": [
+				{
+					"name": "Get Collection Summary",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/summary",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "summary"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Import & Export",
+			"item": [
+				{
+					"name": "Export Cameras to CSV",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/export",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "export"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Import Cameras from CSV",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": [],
+									"description": "Upload a CSV file with camera data"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/import",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "import"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Default Images",
+			"item": [
+				{
+					"name": "Search Default Images",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/default-images/search?brand=Nikon&model=F50",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "default-images", "search"],
+							"query": [
+								{
+									"key": "brand",
+									"value": "Nikon"
+								},
+								{
+									"key": "model",
+									"value": "F50"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Default Images",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/default-images",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "default-images"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add Default Image",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"brand\": \"Nikon\",\n    \"model\": \"F50\",\n    \"image_url\": \"https://example.com/nikon-f50.jpg\",\n    \"attribution\": \"Wikipedia\",\n    \"attribution_url\": \"https://wikipedia.org\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/default-images",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "default-images"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Image Search",
+			"item": [
+				{
+					"name": "Search Images",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"query\": \"Nikon F50 camera\",\n    \"brand\": \"Nikon\",\n    \"model\": \"F50\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/image-search",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "image-search"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Cache Management",
+			"item": [
+				{
+					"name": "Get Cache Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cache/stats",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cache", "stats"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Clear Cache",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cache/clear",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cache", "clear"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Job Queue",
+			"item": [
+				{
+					"name": "Get Job Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs/status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "jobs", "status"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Job Queue",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/jobs/queue",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "jobs", "queue"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Attribution",
+			"item": [
+				{
+					"name": "Get Attribution Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/attribution/info",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "attribution", "info"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Performance",
+			"item": [
+				{
+					"name": "Get Performance Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/performance/metrics",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "performance", "metrics"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "cameraId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

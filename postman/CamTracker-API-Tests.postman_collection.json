@@ -1,0 +1,600 @@
+{
+	"info": {
+		"_postman_id": "camtrack-api-tests",
+		"name": "CamTracker API Tests",
+		"description": "Automated test suite for CamTracker Deluxe API endpoints",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Setup Tests",
+			"item": [
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Server is healthy', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('status');",
+									"    pm.expect(responseJson.status).to.eql('ok');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "health"]
+						}
+					}
+				},
+				{
+					"name": "Clear All Cameras",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Cameras cleared successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras/clear",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras", "clear"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Camera CRUD Tests",
+			"item": [
+				{
+					"name": "Get Empty Camera List",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns empty array when no cameras exist', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.be.an('array');",
+									"    pm.expect(responseJson).to.have.lengthOf(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras"]
+						}
+					}
+				},
+				{
+					"name": "Create Camera 1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Camera created successfully', function () {",
+									"    pm.response.to.have.status(201);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('id');",
+									"    pm.expect(responseJson.brand).to.eql('Nikon');",
+									"    pm.expect(responseJson.model).to.eql('F50');",
+									"    pm.expect(responseJson.weighted_price).to.eql(540);",
+									"    ",
+									"    pm.collectionVariables.set('camera1Id', responseJson.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"brand\": \"Nikon\",\n    \"model\": \"F50\",\n    \"serial\": \"2922618\",\n    \"mechanical_status\": 5,\n    \"cosmetic_status\": 4,\n    \"kamerastore_price\": 600,\n    \"comment\": \"Test camera 1\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras"]
+						}
+					}
+				},
+				{
+					"name": "Create Camera 2",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Camera created successfully', function () {",
+									"    pm.response.to.have.status(201);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('id');",
+									"    pm.expect(responseJson.brand).to.eql('Canon');",
+									"    pm.expect(responseJson.model).to.eql('AE-1');",
+									"    ",
+									"    pm.collectionVariables.set('camera2Id', responseJson.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"brand\": \"Canon\",\n    \"model\": \"AE-1\",\n    \"serial\": \"1234567\",\n    \"mechanical_status\": 4,\n    \"cosmetic_status\": 3,\n    \"kamerastore_price\": 150,\n    \"sold_price\": 120,\n    \"comment\": \"Test camera 2\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras"]
+						}
+					}
+				},
+				{
+					"name": "Get All Cameras",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns list of cameras', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.be.an('array');",
+									"    pm.expect(responseJson).to.have.lengthOf(2);",
+									"    ",
+									"    const brands = responseJson.map(camera => camera.brand);",
+									"    pm.expect(brands).to.include('Nikon');",
+									"    pm.expect(brands).to.include('Canon');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras"]
+						}
+					}
+				},
+				{
+					"name": "Get Single Camera",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns single camera', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('id');",
+									"    pm.expect(responseJson.brand).to.eql('Nikon');",
+									"    pm.expect(responseJson.model).to.eql('F50');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras/{{camera1Id}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras", "{{camera1Id}}"]
+						}
+					}
+				},
+				{
+					"name": "Update Camera",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Camera updated successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.comment).to.eql('Updated test camera');",
+									"    pm.expect(responseJson.mechanical_status).to.eql(3);",
+									"    pm.expect(responseJson.weighted_price).to.eql(420);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"comment\": \"Updated test camera\",\n    \"mechanical_status\": 3\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras/{{camera1Id}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras", "{{camera1Id}}"]
+						}
+					}
+				},
+				{
+					"name": "Delete Camera",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Camera deleted successfully', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('message');",
+									"    pm.expect(responseJson.message).to.contain('deleted successfully');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras/{{camera1Id}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras", "{{camera1Id}}"]
+						}
+					}
+				},
+				{
+					"name": "Verify Deletion",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Camera no longer exists', function () {",
+									"    pm.response.to.have.status(404);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('error');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras/{{camera1Id}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras", "{{camera1Id}}"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Search & Filter Tests",
+			"item": [
+				{
+					"name": "Search by Brand",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Search returns matching cameras', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.be.an('array');",
+									"    pm.expect(responseJson).to.have.lengthOf(1);",
+									"    pm.expect(responseJson[0].brand).to.eql('Canon');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras?search=Canon",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras"],
+							"query": [
+								{
+									"key": "search",
+									"value": "Canon"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Filter by Price Range",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Filter returns cameras in price range', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.be.an('array');",
+									"    responseJson.forEach(camera => {",
+									"        pm.expect(camera.kamerastore_price).to.be.at.least(100);",
+									"        pm.expect(camera.kamerastore_price).to.be.at.most(200);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras?minPrice=100&maxPrice=200",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras"],
+							"query": [
+								{
+									"key": "minPrice",
+									"value": "100"
+								},
+								{
+									"key": "maxPrice",
+									"value": "200"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Summary Tests",
+			"item": [
+				{
+					"name": "Get Collection Summary",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Summary returns correct statistics', function () {",
+									"    pm.response.to.have.status(200);",
+									"    const responseJson = pm.response.json();",
+									"    ",
+									"    pm.expect(responseJson).to.have.property('total_cameras');",
+									"    pm.expect(responseJson).to.have.property('total_value_kamerastore');",
+									"    pm.expect(responseJson).to.have.property('total_value_weighted');",
+									"    pm.expect(responseJson).to.have.property('brand_distribution');",
+									"    pm.expect(responseJson).to.have.property('condition_distribution');",
+									"    ",
+									"    pm.expect(responseJson.total_cameras).to.eql(1);",
+									"    pm.expect(responseJson.total_value_kamerastore).to.eql(150);",
+									"    pm.expect(responseJson.brand_distribution).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/summary",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "summary"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Validation Tests",
+			"item": [
+				{
+					"name": "Create Camera - Missing Brand",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Rejects camera without brand', function () {",
+									"    pm.response.to.have.status(400);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('error');",
+									"    pm.expect(responseJson.error).to.contain('Brand is required');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"model\": \"F50\",\n    \"mechanical_status\": 5,\n    \"cosmetic_status\": 4,\n    \"kamerastore_price\": 600\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras"]
+						}
+					}
+				},
+				{
+					"name": "Create Camera - Invalid Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Rejects camera with invalid status', function () {",
+									"    pm.response.to.have.status(400);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('error');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"brand\": \"Nikon\",\n    \"model\": \"F50\",\n    \"mechanical_status\": 6,\n    \"cosmetic_status\": 4,\n    \"kamerastore_price\": 600\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras"]
+						}
+					}
+				},
+				{
+					"name": "Get Nonexistent Camera",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Returns 404 for nonexistent camera', function () {",
+									"    pm.response.to.have.status(404);",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson).to.have.property('error');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/cameras/999999",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "cameras", "999999"]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "camera1Id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "camera2Id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

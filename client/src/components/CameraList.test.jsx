@@ -66,10 +66,11 @@ describe('CameraList', () => {
   it('fetches cameras on component mount', async () => {
     vi.mocked(api.getCameras).mockResolvedValue([])
 
-    await act(async () => {
-      render(<CameraList {...defaultProps} />)
-    })
-    expect(api.getCameras).toHaveBeenCalledTimes(1)
+    render(<CameraList {...defaultProps} />)
+    
+    await waitFor(() => {
+      expect(api.getCameras).toHaveBeenCalledTimes(1)
+    }, { timeout: 3000 })
   })
 
   it('calls onCamerasUpdate when cameras are loaded', async () => {
@@ -84,13 +85,24 @@ describe('CameraList', () => {
     
     await waitFor(() => {
       expect(mockOnCamerasUpdate).toHaveBeenCalledWith(mockCameras)
-    })
+    }, { timeout: 3000 })
   })
 
   it('refetches cameras when refreshTrigger changes', async () => {
+    vi.mocked(api.getCameras).mockResolvedValue([])
+    
     const { rerender } = render(<CameraList {...defaultProps} refreshTrigger={0} />)
-    expect(api.getCameras).toHaveBeenCalledTimes(1)
-    await act(async () => rerender(<CameraList {...defaultProps} refreshTrigger={1} />))
-    expect(api.getCameras).toHaveBeenCalledTimes(2)
+    
+    await waitFor(() => {
+      expect(api.getCameras).toHaveBeenCalledTimes(1)
+    }, { timeout: 3000 })
+    
+    await act(async () => {
+      rerender(<CameraList {...defaultProps} refreshTrigger={1} />)
+    })
+    
+    await waitFor(() => {
+      expect(api.getCameras).toHaveBeenCalledTimes(2)
+    }, { timeout: 3000 })
   })
 })

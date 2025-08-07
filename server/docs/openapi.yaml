@@ -1,0 +1,1033 @@
+openapi: 3.0.3
+info:
+  title: CamTracker Deluxe API
+  description: |
+    Comprehensive API for managing vintage analog camera collections with advanced condition tracking, market value monitoring, and professional features.
+    
+    ## Features
+    - **Camera Management**: Full CRUD operations for camera records
+    - **Search & Filtering**: Advanced search by brand, model, serial number with filtering options
+    - **Image Management**: Upload and manage camera images with caching
+    - **Import/Export**: CSV import/export functionality with validation
+    - **Statistics**: Collection analytics, brand distribution, and condition analysis
+    - **Performance Monitoring**: Cache management and performance metrics
+    - **Job Processing**: Background image processing and data management
+    
+    ## Authentication
+    This is a local application API - no authentication required.
+    
+    ## Error Handling
+    The API uses conventional HTTP response codes:
+    - `200` - Success
+    - `201` - Created
+    - `400` - Bad Request (validation errors)
+    - `404` - Not Found
+    - `500` - Internal Server Error
+    
+    Error responses include a descriptive error message:
+    ```json
+    {
+      "error": "Brand is required"
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: CamTracker Deluxe
+    url: https://github.com/your-repo/camtrack-deluxe
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://your-production-url.com/api
+    description: Production server
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Check if the API server is running and healthy
+      tags:
+        - System
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /cameras:
+    get:
+      summary: List All Cameras
+      description: |
+        Retrieve all cameras with optional search and filtering parameters.
+        Supports pagination, search, and multiple filter options.
+      tags:
+        - Cameras
+      parameters:
+        - name: search
+          in: query
+          description: Search term for brand, model, or serial number
+          schema:
+            type: string
+            example: "Nikon"
+        - name: minPrice
+          in: query
+          description: Minimum kamerastore price filter
+          schema:
+            type: number
+            example: 100
+        - name: maxPrice
+          in: query
+          description: Maximum kamerastore price filter
+          schema:
+            type: number
+            example: 500
+        - name: condition
+          in: query
+          description: Minimum condition rating (1-5)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5
+            example: 4
+        - name: brand
+          in: query
+          description: Filter by specific brand
+          schema:
+            type: string
+            example: "Canon"
+        - name: sort
+          in: query
+          description: Sort field
+          schema:
+            type: string
+            enum: [date, brand, model, price]
+            default: date
+        - name: order
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: List of cameras
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Camera'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create New Camera
+      description: |
+        Create a new camera record. Supports multipart form data for image uploads.
+        Automatically calculates weighted_price based on condition and kamerastore_price.
+      tags:
+        - Cameras
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CameraInput'
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                brand:
+                  type: string
+                  description: Camera brand
+                  example: "Nikon"
+                model:
+                  type: string
+                  description: Camera model
+                  example: "F50"
+                serial:
+                  type: string
+                  description: Serial number
+                  example: "2922618"
+                mechanical_status:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  description: Mechanical condition (1-5)
+                  example: 5
+                cosmetic_status:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  description: Cosmetic condition (1-5)
+                  example: 4
+                kamerastore_price:
+                  type: number
+                  minimum: 0
+                  description: Kamerastore price
+                  example: 600
+                sold_price:
+                  type: number
+                  minimum: 0
+                  description: Actual sold price
+                  example: 540
+                comment:
+                  type: string
+                  description: Additional comments
+                  example: "Excellent condition with original box"
+                image1:
+                  type: string
+                  format: binary
+                  description: First camera image (JPEG/PNG, max 5MB)
+                image2:
+                  type: string
+                  format: binary
+                  description: Second camera image (JPEG/PNG, max 5MB)
+              required:
+                - brand
+                - model
+      responses:
+        '201':
+          description: Camera created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camera'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Clear All Cameras (Development Only)
+      description: |
+        **⚠️ DEVELOPMENT ONLY**: Remove all cameras from the database.
+        This endpoint is only available in development mode.
+      tags:
+        - Cameras
+        - Development
+      responses:
+        '200':
+          description: All cameras cleared
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "All cameras cleared"
+                  count:
+                    type: integer
+                    example: 5
+
+  /cameras/{id}:
+    get:
+      summary: Get Single Camera
+      description: Retrieve detailed information about a specific camera
+      tags:
+        - Cameras
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Camera ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Camera details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camera'
+        '404':
+          description: Camera not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update Camera
+      description: |
+        Update an existing camera record. Only provided fields will be updated.
+        Weighted price is automatically recalculated if condition or kamerastore_price changes.
+      tags:
+        - Cameras
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Camera ID
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CameraUpdate'
+      responses:
+        '200':
+          description: Camera updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Camera'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Camera not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      summary: Delete Camera
+      description: Remove a camera record and associated images
+      tags:
+        - Cameras
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Camera ID
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Camera deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Camera deleted successfully"
+                  id:
+                    type: integer
+                    example: 1
+        '404':
+          description: Camera not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /summary:
+    get:
+      summary: Collection Summary
+      description: |
+        Get comprehensive statistics about the camera collection including
+        total value, brand distribution, condition breakdown, and more.
+      tags:
+        - Statistics
+      responses:
+        '200':
+          description: Collection statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CollectionSummary'
+
+  /export:
+    get:
+      summary: Export Cameras to CSV
+      description: |
+        Export all cameras to a CSV file with all camera data.
+        Returns a downloadable CSV file with proper headers.
+      tags:
+        - Import/Export
+      responses:
+        '200':
+          description: CSV file download
+          content:
+            text/csv:
+              schema:
+                type: string
+                example: |
+                  Brand,Model,Serial,Mechanical,Cosmetic,Kamerastore,Weighted Price,Sold Price,Comment
+                  Nikon,F50,2922618,5,4,600,540,540,Excellent condition
+          headers:
+            Content-Disposition:
+              description: Attachment filename
+              schema:
+                type: string
+                example: 'attachment; filename="cameras_export_20240101.csv"'
+
+  /import:
+    post:
+      summary: Import Cameras from CSV
+      description: |
+        Import camera data from a CSV file. Validates all data before importing.
+        Returns summary of successful imports and any validation errors.
+      tags:
+        - Import/Export
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: CSV file with camera data
+              required:
+                - file
+      responses:
+        '200':
+          description: Import completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imported:
+                    type: integer
+                    description: Number of cameras successfully imported
+                    example: 8
+                  errors:
+                    type: array
+                    description: List of validation errors
+                    items:
+                      type: string
+                    example: ["Row 3: Brand is required", "Row 7: Invalid mechanical status"]
+        '400':
+          description: Invalid file or format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /default-images/search:
+    get:
+      summary: Search Default Images
+      description: Find default images for a specific camera brand and model
+      tags:
+        - Images
+      parameters:
+        - name: brand
+          in: query
+          required: true
+          description: Camera brand
+          schema:
+            type: string
+            example: "Nikon"
+        - name: model
+          in: query
+          required: true
+          description: Camera model
+          schema:
+            type: string
+            example: "F50"
+      responses:
+        '200':
+          description: List of default images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DefaultImage'
+        '400':
+          description: Missing required parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /default-images:
+    get:
+      summary: Get All Default Images
+      description: Retrieve all available default camera images
+      tags:
+        - Images
+      responses:
+        '200':
+          description: List of all default images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DefaultImage'
+
+    post:
+      summary: Add Default Image
+      description: Add a new default image for a camera model
+      tags:
+        - Images
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                brand:
+                  type: string
+                  example: "Nikon"
+                model:
+                  type: string
+                  example: "F50"
+                image_url:
+                  type: string
+                  format: uri
+                  example: "https://example.com/nikon-f50.jpg"
+                attribution:
+                  type: string
+                  example: "Wikipedia"
+                attribution_url:
+                  type: string
+                  format: uri
+                  example: "https://wikipedia.org"
+              required:
+                - brand
+                - model
+                - image_url
+      responses:
+        '201':
+          description: Default image added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DefaultImage'
+
+  /image-search:
+    post:
+      summary: Search for Images
+      description: Search for camera images using external APIs (Wikipedia, etc.)
+      tags:
+        - Images
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                query:
+                  type: string
+                  description: Search query
+                  example: "Nikon F50 camera"
+                brand:
+                  type: string
+                  description: Camera brand
+                  example: "Nikon"
+                model:
+                  type: string
+                  description: Camera model
+                  example: "F50"
+              required:
+                - query
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        url:
+                          type: string
+                          format: uri
+                        title:
+                          type: string
+                        source:
+                          type: string
+                        thumbnail:
+                          type: string
+                          format: uri
+
+  /cache/stats:
+    get:
+      summary: Get Cache Statistics
+      description: Retrieve cache performance statistics
+      tags:
+        - Cache
+      responses:
+        '200':
+          description: Cache statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_images:
+                    type: integer
+                  cache_size:
+                    type: string
+                  hit_rate:
+                    type: number
+                  last_cleanup:
+                    type: string
+                    format: date-time
+
+  /cache/clear:
+    delete:
+      summary: Clear Image Cache
+      description: Clear all cached images and reset cache statistics
+      tags:
+        - Cache
+      responses:
+        '200':
+          description: Cache cleared successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Cache cleared successfully"
+                  cleared_files:
+                    type: integer
+                    example: 42
+
+  /jobs/status:
+    get:
+      summary: Get Job Queue Status
+      description: Get the current status of background job processing
+      tags:
+        - Jobs
+      responses:
+        '200':
+          description: Job queue status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  active:
+                    type: boolean
+                  pending_jobs:
+                    type: integer
+                  completed_jobs:
+                    type: integer
+                  failed_jobs:
+                    type: integer
+
+  /jobs/queue:
+    get:
+      summary: Get Job Queue
+      description: List all jobs in the queue with their status
+      tags:
+        - Jobs
+      responses:
+        '200':
+          description: Job queue contents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    type:
+                      type: string
+                    status:
+                      type: string
+                      enum: [pending, processing, completed, failed]
+                    created_at:
+                      type: string
+                      format: date-time
+                    updated_at:
+                      type: string
+                      format: date-time
+
+  /performance/metrics:
+    get:
+      summary: Get Performance Metrics
+      description: Retrieve API performance metrics and statistics
+      tags:
+        - Performance
+      responses:
+        '200':
+          description: Performance metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  response_times:
+                    type: object
+                  request_counts:
+                    type: object
+                  error_rates:
+                    type: object
+                  uptime:
+                    type: string
+
+  /attribution/info:
+    get:
+      summary: Get Attribution Information
+      description: Get attribution information for images and data sources
+      tags:
+        - Attribution
+      responses:
+        '200':
+          description: Attribution information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        url:
+                          type: string
+                        license:
+                          type: string
+
+components:
+  schemas:
+    Camera:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        brand:
+          type: string
+          example: "Nikon"
+        model:
+          type: string
+          example: "F50"
+        serial:
+          type: string
+          nullable: true
+          example: "2922618"
+        mechanical_status:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        cosmetic_status:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 4
+        kamerastore_price:
+          type: number
+          minimum: 0
+          example: 600
+        weighted_price:
+          type: number
+          minimum: 0
+          description: Automatically calculated based on condition and kamerastore_price
+          example: 540
+        sold_price:
+          type: number
+          minimum: 0
+          nullable: true
+          example: 540
+        comment:
+          type: string
+          nullable: true
+          example: "Excellent condition with original box"
+        image1_path:
+          type: string
+          nullable: true
+          example: "/uploads/cameras/uuid-image1.jpg"
+        image2_path:
+          type: string
+          nullable: true
+          example: "/uploads/cameras/uuid-image2.jpg"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+      required:
+        - id
+        - brand
+        - model
+        - created_at
+        - updated_at
+
+    CameraInput:
+      type: object
+      properties:
+        brand:
+          type: string
+          example: "Nikon"
+        model:
+          type: string
+          example: "F50"
+        serial:
+          type: string
+          example: "2922618"
+        mechanical_status:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        cosmetic_status:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 4
+        kamerastore_price:
+          type: number
+          minimum: 0
+          example: 600
+        sold_price:
+          type: number
+          minimum: 0
+          example: 540
+        comment:
+          type: string
+          example: "Excellent condition with original box"
+      required:
+        - brand
+        - model
+
+    CameraUpdate:
+      type: object
+      properties:
+        brand:
+          type: string
+          example: "Nikon"
+        model:
+          type: string
+          example: "F50"
+        serial:
+          type: string
+          example: "2922618"
+        mechanical_status:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 5
+        cosmetic_status:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 4
+        kamerastore_price:
+          type: number
+          minimum: 0
+          example: 600
+        sold_price:
+          type: number
+          minimum: 0
+          example: 540
+        comment:
+          type: string
+          example: "Updated comment"
+
+    CollectionSummary:
+      type: object
+      properties:
+        totalCameras:
+          type: integer
+          example: 25
+        totalValue:
+          type: number
+          example: 12500.00
+        averageValue:
+          type: number
+          example: 500.00
+        averageMechanicalCondition:
+          type: number
+          example: 4.2
+        averageCosmeticCondition:
+          type: number
+          example: 3.8
+        brandBreakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              brand:
+                type: string
+                example: "Nikon"
+              count:
+                type: integer
+                example: 8
+              totalValue:
+                type: number
+                example: 4800.00
+              averageValue:
+                type: number
+                example: 600.00
+        conditionBreakdown:
+          type: object
+          properties:
+            mechanical:
+              type: object
+              additionalProperties:
+                type: integer
+              example:
+                "1": 1
+                "2": 2
+                "3": 5
+                "4": 8
+                "5": 9
+            cosmetic:
+              type: object
+              additionalProperties:
+                type: integer
+              example:
+                "1": 0
+                "2": 3
+                "3": 6
+                "4": 10
+                "5": 6
+        priceRanges:
+          type: object
+          properties:
+            under100:
+              type: integer
+              example: 2
+            range100to300:
+              type: integer
+              example: 8
+            range300to500:
+              type: integer
+              example: 6
+            range500to1000:
+              type: integer
+              example: 7
+            over1000:
+              type: integer
+              example: 2
+        mostExpensive:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            brand:
+              type: string
+            model:
+              type: string
+            price:
+              type: number
+        leastExpensive:
+          type: object
+          nullable: true
+          properties:
+            id:
+              type: integer
+            brand:
+              type: string
+            model:
+              type: string
+            price:
+              type: number
+        recentAdditions:
+          type: integer
+          description: Cameras added in the last 30 days
+          example: 3
+        camerasWithImages:
+          type: integer
+          description: Number of cameras with uploaded images
+          example: 18
+
+    DefaultImage:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        brand:
+          type: string
+          example: "Nikon"
+        model:
+          type: string
+          example: "F50"
+        image_url:
+          type: string
+          format: uri
+          example: "https://example.com/nikon-f50.jpg"
+        cached_path:
+          type: string
+          nullable: true
+          example: "/cached-images/nikon-f50-hash.jpg"
+        attribution:
+          type: string
+          example: "Wikipedia"
+        attribution_url:
+          type: string
+          format: uri
+          example: "https://wikipedia.org"
+        created_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message describing what went wrong
+          example: "Brand is required"
+      required:
+        - error
+
+tags:
+  - name: Cameras
+    description: Camera collection management
+  - name: Statistics
+    description: Collection analytics and summaries
+  - name: Import/Export
+    description: Data import and export functionality
+  - name: Images
+    description: Image management and search
+  - name: Cache
+    description: Image cache management
+  - name: Jobs
+    description: Background job processing
+  - name: Performance
+    description: Performance monitoring
+  - name: Attribution
+    description: Data source attribution
+  - name: System
+    description: System health and status
+  - name: Development
+    description: Development-only endpoints
