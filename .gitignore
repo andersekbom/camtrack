@@ -26,9 +26,10 @@ pids
 coverage/
 *.lcov
 
-# Database
+# Database (exclude general database files but include our specific database)
 *.db
 *.sqlite
+!server/database/cameras.db
 
 # Uploads
 uploads/

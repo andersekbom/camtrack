@@ -59,7 +59,7 @@ class ImageService {
     }
 
     // Priority 4: Generic placeholder
-    result.primary_image = '/uploads/placeholders/camera-placeholder.jpg';
+    result.primary_image = '/uploads/placeholders/camera-placeholder.svg';
     result.default_image_info = {
       source: 'System',
       attribution: 'Generic camera placeholder',

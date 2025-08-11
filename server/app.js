@@ -56,6 +56,7 @@ app.use('/api/performance', require('./routes/performance'));
 app.use('/api/image-proxy', require('./routes/imageProxy'));
 
 // Import/Export routes
+console.log('Loading import/export routes');
 app.use('/api/export', require('./routes/importExport'));
 app.use('/api/import', require('./routes/importExport'));
 

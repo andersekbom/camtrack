@@ -75,8 +75,12 @@ npm run preview       # Preview production build
 ### ✅ Image Management
 - Support for 1-2 images per camera
 - UUID-based file naming system
-- Professional image displays with fallbacks
+- Professional image displays with 4-tier fallback system
 - File size validation (5MB limit) and type checking (JPEG/PNG)
+- **Default Image System**: Automatic Wikipedia image fetching for model-specific defaults
+- **Background Processing**: Job queue system for automatic image population
+- **Brand Fallback**: Local brand logos for major manufacturers (Nikon, Canon, Leica)
+- **Generic Placeholder**: Camera icon for unknown models/brands
 
 ### ✅ Data Import/Export
 - CSV import with comprehensive validation

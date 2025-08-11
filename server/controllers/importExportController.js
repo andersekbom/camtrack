@@ -2,6 +2,7 @@ const { Parser } = require('json2csv');
 const csvParser = require('csv-parser');
 const fs = require('fs');
 const Camera = require('../models/Camera');
+const jobQueue = require('../services/JobQueueService');
 const multer = require('multer');
 
 // Configure multer for CSV file uploads
@@ -22,13 +23,36 @@ class ImportExportController {
   // Export all cameras to CSV
   static async exportCameras(req, res) {
     try {
+      console.log('Export endpoint called'); // Debug log
       // Get all cameras from database
       const cameras = Camera.getAllCameras();
+      console.log('Cameras found:', cameras ? cameras.length : 'null'); // Debug log
       
       if (!cameras || cameras.length === 0) {
-        return res.status(404).json({ 
-          error: 'No cameras found to export' 
-        });
+        // Return empty CSV with just headers
+        const fields = [
+          { label: 'Brand', value: 'brand' },
+          { label: 'Model', value: 'model' },
+          { label: 'Serial', value: 'serial' },
+          { label: 'Mechanical', value: 'mechanical_status' },
+          { label: 'Cosmetic', value: 'cosmetic_status' },
+          { label: 'Kamerastore Price', value: 'kamerastore_price' },
+          { label: 'Weighted Price', value: 'weighted_price' },
+          { label: 'Sold Price', value: 'sold_price' },
+          { label: 'Comment', value: 'comment' },
+          { label: 'Image 1 Path', value: 'image1_path' },
+          { label: 'Image 2 Path', value: 'image2_path' },
+          { label: 'Created At', value: 'created_at' },
+          { label: 'Updated At', value: 'updated_at' }
+        ];
+        
+        const json2csvParser = new Parser({ fields });
+        const csv = json2csvParser.parse([]);
+        
+        const filename = `cameras_export_${new Date().toISOString().split('T')[0]}.csv`;
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        return res.send(csv);
       }
 
       // Define CSV fields and headers
@@ -163,6 +187,12 @@ class ImportExportController {
             const camera = Camera.createCamera(cameraData);
             results.push(camera);
             created++;
+
+            // Schedule background job to fetch default image if no user images
+            const jobId = jobQueue.scheduleDefaultImageFetch(camera);
+            if (jobId) {
+              console.log(`Scheduled default image job ${jobId} for ${camera.brand} ${camera.model}`);
+            }
 
           } catch (error) {
             errors.push(`Row ${processed}: ${error.message}`);
