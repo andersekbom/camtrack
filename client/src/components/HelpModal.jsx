@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
+import MarkdownViewer from './MarkdownViewer'
 
 function HelpModal({ isOpen, onClose, darkMode }) {
   const [helpMenu, setHelpMenu] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [showMarkdown, setShowMarkdown] = useState(null)
 
   useEffect(() => {
     if (isOpen) {
@@ -33,8 +35,8 @@ function HelpModal({ isOpen, onClose, darkMode }) {
 
   const handleDocumentClick = async (item) => {
     if (item.type === 'markdown') {
-      // Open markdown content in new tab
-      window.open(item.url, '_blank')
+      // Show markdown in modal with consistent styling
+      setShowMarkdown(item)
     } else if (item.type === 'external') {
       // Open external links in new tab
       window.open(item.url, '_blank')
@@ -44,13 +46,30 @@ function HelpModal({ isOpen, onClose, darkMode }) {
     }
   }
 
+  const handleCloseMarkdown = () => {
+    setShowMarkdown(null)
+  }
+
   if (!isOpen) return null
 
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
-    >
+    <>
+      {/* Markdown Viewer Modal */}
+      {showMarkdown && (
+        <MarkdownViewer
+          url={showMarkdown.url}
+          title={showMarkdown.title}
+          darkMode={darkMode}
+          onClose={handleCloseMarkdown}
+        />
+      )}
+
+      {/* Main Help Modal */}
+    {!showMarkdown && (
+      <div 
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+        onClick={onClose}
+      >
       <div 
         className={`max-w-2xl w-full max-h-[80vh] overflow-hidden rounded-lg shadow-xl ${
           darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
@@ -177,14 +196,16 @@ function HelpModal({ isOpen, onClose, darkMode }) {
                   <li>• Start with the <strong>Quick Start Guide</strong> for basic setup</li>
                   <li>• Use the <strong>Complete User Guide</strong> for detailed features</li>
                   <li>• Check <strong>API Documentation</strong> for integration projects</li>
-                  <li>• All links open in new tabs for easy reference</li>
+                  <li>• Documentation opens with consistent styling and formatting</li>
                 </ul>
               </div>
             </div>
           )}
         </div>
       </div>
-    </div>
+      </div>
+    )}
+    </>
   )
 }
 
