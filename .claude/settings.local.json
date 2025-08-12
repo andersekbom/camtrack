@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm start)",
+      "Bash(npm run dev:*)",
+      "Bash(npm install)",
+      "Bash(npm run init-db:*)",
+      "Bash(curl:*)",
+      "Bash(touch:*)",
+      "Bash(find:*)",
+      "Bash(taskkill:*)",
+      "Bash(node:*)",
+      "Bash(rm:*)",
+      "Bash(true)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(npm install:*)",
+      "Bash(npm search:*)",
+      "Bash(npm info:*)",
+      "Bash(figma-developer-mcp:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(grep:*)",
+      "Bash(powershell.exe:*)",
+      "Bash(/bashes)",
+      "Bash(mkdir:*)",
+      "Bash(git ls-tree:*)"
+    ],
+    "deny": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "figma-mqlvne-95"
+  ]
+}

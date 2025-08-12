@@ -195,6 +195,46 @@ class JobsController {
     }
   }
 
+  // POST /api/jobs/populate-default-images - Run default image population script
+  static async populateDefaultImages(req, res) {
+    try {
+      const { 
+        dryRun = false, 
+        enableCaching = true, 
+        skipExisting = true, 
+        minQuality = 4,
+        batchSize = 10,
+        priority = 5 
+      } = req.body;
+
+      // Add a job to run the default image population
+      const jobId = jobQueue.addJob('populate-default-images', {
+        dryRun,
+        enableCaching,
+        skipExisting,
+        minQuality: Math.max(1, Math.min(10, minQuality)),
+        batchSize: Math.max(1, Math.min(50, batchSize))
+      }, {
+        priority: Math.max(1, Math.min(10, priority))
+      });
+      
+      res.status(201).json({
+        message: 'Default image population job scheduled',
+        jobId,
+        options: {
+          dryRun,
+          enableCaching,
+          skipExisting,
+          minQuality,
+          batchSize
+        }
+      });
+    } catch (error) {
+      console.error('Error scheduling default image population:', error);
+      res.status(500).json({ error: 'Failed to schedule default image population' });
+    }
+  }
+
   // DELETE /api/jobs/clear - Clear all completed/failed jobs
   static async clearJobs(req, res) {
     try {
@@ -255,6 +295,13 @@ class JobsController {
           priority: '1-10 (1 recommended)',
           requiredData: [],
           optionalData: []
+        },
+        {
+          type: 'populate-default-images',
+          description: 'Run default image population for all camera models',
+          priority: '1-10 (5 recommended)',
+          requiredData: [],
+          optionalData: ['dryRun', 'enableCaching', 'skipExisting', 'minQuality', 'batchSize']
         }
       ];
       

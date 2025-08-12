@@ -14,6 +14,14 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false, inline = false }) => {
   })
   const [showAddForm, setShowAddForm] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [populatingImages, setPopulatingImages] = useState(false)
+  const [replacingImage, setReplacingImage] = useState(null)
+  const [showReplaceFormFor, setShowReplaceFormFor] = useState(null)
+  const [replaceData, setReplaceData] = useState({
+    imageFile: null,
+    source: 'Manual Upload',
+    attribution: ''
+  })
 
   useEffect(() => {
     fetchDefaultImages()
@@ -86,6 +94,104 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false, inline = false }) => {
     } catch (err) {
       alert(`Error deleting image: ${err.message}`)
     }
+  }
+
+  const handlePopulateDefaultImages = async () => {
+    if (!confirm('This will search for and add default images for all camera models without existing defaults. This may take several minutes. Continue?')) {
+      return
+    }
+
+    try {
+      setPopulatingImages(true)
+      const response = await fetch('http://localhost:3000/api/jobs/populate-default-images', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          dryRun: false,
+          enableCaching: true,
+          skipExisting: true,
+          minQuality: 4,
+          batchSize: 10,
+          priority: 5
+        })
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to start image population job')
+      }
+
+      const result = await response.json()
+      alert(`Image population job started successfully! Job ID: ${result.jobId}\n\nThis will run in the background. Check the job status or refresh the page in a few minutes to see new images.`)
+    } catch (err) {
+      alert(`Error starting image population: ${err.message}`)
+    } finally {
+      setPopulatingImages(false)
+    }
+  }
+
+  const handleReplaceImage = (id, brand, model) => {
+    setShowReplaceFormFor(id)
+    setReplaceData({
+      imageFile: null,
+      source: 'Manual Upload',
+      attribution: ''
+    })
+  }
+
+  const handleSubmitReplace = async (e, id, brand, model) => {
+    e.preventDefault()
+    
+    if (!replaceData.imageFile) {
+      alert('Please select an image file')
+      return
+    }
+
+    try {
+      setReplacingImage(id)
+      
+      // Create FormData for file upload
+      const formData = new FormData()
+      formData.append('defaultImage', replaceData.imageFile)
+      formData.append('id', id)
+      formData.append('source', replaceData.source)
+      formData.append('attribution', replaceData.attribution)
+      
+      const response = await fetch('http://localhost:3000/api/default-images/replace-upload', {
+        method: 'POST',
+        body: formData // Don't set Content-Type header for FormData
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to replace image')
+      }
+
+      const result = await response.json()
+      alert(`Image replaced successfully for ${brand} ${model}!`)
+      setShowReplaceFormFor(null)
+      setReplaceData({
+        imageFile: null,
+        source: 'Manual Upload',
+        attribution: ''
+      })
+      fetchDefaultImages()
+    } catch (err) {
+      alert(`Error replacing image: ${err.message}`)
+    } finally {
+      setReplacingImage(null)
+    }
+  }
+
+  const handleCancelReplace = () => {
+    setShowReplaceFormFor(null)
+    setReplaceData({
+      imageFile: null,
+      source: 'Manual Upload',
+      attribution: ''
+    })
   }
 
   // Helper function to build proper image URLs
@@ -189,6 +295,13 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false, inline = false }) => {
         >
           Refresh
         </button>
+        <button
+          onClick={handlePopulateDefaultImages}
+          disabled={populatingImages}
+          className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
+        >
+          {populatingImages ? 'Starting...' : 'Re-run Image Generation'}
+        </button>
       </div>
 
       {/* Add New Image Form */}
@@ -283,46 +396,135 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false, inline = false }) => {
         </div>
         
         {filteredImages.map(image => (
-          <div
-            key={image.id}
-            className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg flex items-start gap-4`}
-          >
-            <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden flex items-center justify-center">
-              <img
-                src={getImageUrl(image.image_url)}
-                alt={`${image.brand} ${image.model}`}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.style.display = 'none'
-                  e.target.nextSibling.style.display = 'flex'
-                }}
-              />
-              {/* Fallback for failed image loads */}
-              <div className="hidden w-full h-full flex items-center justify-center text-gray-400">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
+          <div key={image.id}>
+            <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg flex items-start gap-4`}>
+              <div className="w-16 h-16 bg-gray-200 rounded overflow-hidden flex items-center justify-center">
+                <img
+                  src={getImageUrl(image.image_url)}
+                  alt={`${image.brand} ${image.model}`}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none'
+                    e.target.nextSibling.style.display = 'flex'
+                  }}
+                />
+                {/* Fallback for failed image loads */}
+                <div className="hidden w-full h-full flex items-center justify-center text-gray-400">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-lg">{image.brand} {image.model}</h4>
+                <div className="text-sm text-gray-500 space-y-1">
+                  <div>Source: {image.source}</div>
+                  {image.source_attribution && (
+                    <div>Attribution: {image.source_attribution}</div>
+                  )}
+                  {image.image_quality && (
+                    <div>Quality: {image.image_quality}/10</div>
+                  )}
+                  <div>Created: {new Date(image.created_at).toLocaleDateString()}</div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleReplaceImage(image.id, image.brand, image.model)}
+                  disabled={replacingImage === image.id}
+                  className="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700 disabled:opacity-50"
+                >
+                  {replacingImage === image.id ? 'Replacing...' : 'Replace'}
+                </button>
+                <button
+                  onClick={() => handleDeleteImage(image.id)}
+                  className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                >
+                  Delete
+                </button>
               </div>
             </div>
-            <div className="flex-1">
-              <h4 className="font-semibold text-lg">{image.brand} {image.model}</h4>
-              <div className="text-sm text-gray-500 space-y-1">
-                <div>Source: {image.source}</div>
-                {image.source_attribution && (
-                  <div>Attribution: {image.source_attribution}</div>
-                )}
-                {image.image_quality && (
-                  <div>Quality: {image.image_quality}/10</div>
-                )}
-                <div>Created: {new Date(image.created_at).toLocaleDateString()}</div>
+            
+            {/* Inline Replace Form */}
+            {showReplaceFormFor === image.id && (
+              <div className={`${darkMode ? 'bg-gray-600' : 'bg-yellow-50'} p-4 rounded-lg mt-2 border-2 border-yellow-300`}>
+                <h4 className="text-md font-semibold mb-3">Replace Image for {image.brand} {image.model}</h4>
+                <form onSubmit={(e) => handleSubmitReplace(e, image.id, image.brand, image.model)} className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium mb-1">
+                      Select New Image File *
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png"
+                      onChange={(e) => setReplaceData(prev => ({ ...prev, imageFile: e.target.files[0] }))}
+                      className={`w-full px-3 py-2 border rounded-md text-sm ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-500 text-white' 
+                          : 'border-gray-300'
+                      }`}
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Accepted formats: JPEG, PNG (max 5MB)
+                    </p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Source
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Manual Upload"
+                        value={replaceData.source}
+                        onChange={(e) => setReplaceData(prev => ({ ...prev, source: e.target.value }))}
+                        className={`w-full px-3 py-2 border rounded-md text-sm ${
+                          darkMode 
+                            ? 'bg-gray-700 border-gray-500 text-white placeholder-gray-400' 
+                            : 'border-gray-300'
+                        }`}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium mb-1">
+                        Attribution
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Image credit or attribution"
+                        value={replaceData.attribution}
+                        onChange={(e) => setReplaceData(prev => ({ ...prev, attribution: e.target.value }))}
+                        className={`w-full px-3 py-2 border rounded-md text-sm ${
+                          darkMode 
+                            ? 'bg-gray-700 border-gray-500 text-white placeholder-gray-400' 
+                            : 'border-gray-300'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={replacingImage === image.id}
+                      className="px-3 py-1 bg-yellow-600 text-white rounded text-sm hover:bg-yellow-700 disabled:opacity-50"
+                    >
+                      {replacingImage === image.id ? 'Replacing...' : 'Replace Image'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelReplace}
+                      className="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
               </div>
-            </div>
-            <button
-              onClick={() => handleDeleteImage(image.id)}
-              className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-            >
-              Delete
-            </button>
+            )}
           </div>
         ))}
 

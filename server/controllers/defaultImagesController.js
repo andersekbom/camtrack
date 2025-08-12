@@ -92,6 +92,13 @@ class DefaultImagesController {
   static async updateDefaultImage(req, res) {
     try {
       const { id } = req.params;
+      const { action } = req.query;
+      
+      // Handle replace action
+      if (action === 'replace') {
+        return await DefaultImagesController.replaceDefaultImage(req, res);
+      }
+      
       const { brand, model, image_url, source, source_attribution, image_quality, is_active } = req.body;
       
       // Check if default image exists
@@ -139,6 +146,96 @@ class DefaultImagesController {
       }
       
       res.status(500).json({ error: 'Failed to update default image' });
+    }
+  }
+
+  // Replace default image with file upload
+  static async replaceDefaultImageWithFile(req, res) {
+    try {
+      const { id, source = 'Manual Upload', attribution = '' } = req.body;
+      
+      // Check if file was uploaded
+      if (!req.file) {
+        return res.status(400).json({ error: 'No image file was uploaded' });
+      }
+      
+      // Check if default image exists
+      const existingImage = DefaultImage.findById(id);
+      if (!existingImage) {
+        return res.status(404).json({ error: 'Default image not found' });
+      }
+
+      // Build the image URL path for the uploaded file
+      const imageUrl = `/uploads/default-images/${req.file.filename}`;
+
+      // Update the existing default image record with new image
+      const updatedImage = DefaultImage.update(id, {
+        image_url: imageUrl,
+        source: source,
+        source_attribution: attribution,
+        image_quality: 8 // Default quality for manual uploads
+      });
+
+      res.json({
+        message: 'Default image replaced successfully',
+        defaultImage: updatedImage,
+        previousImageUrl: existingImage.image_url,
+        newImageUrl: imageUrl
+      });
+    } catch (error) {
+      console.error('Error replacing default image with file:', error);
+      res.status(500).json({ 
+        error: 'Failed to replace default image',
+        details: error.message 
+      });
+    }
+  }
+
+  // Replace default image with manual upload (called from updateDefaultImage)
+  static async replaceDefaultImage(req, res) {
+    try {
+      const { id } = req.params;
+      const { imageUrl, source = 'Manual Upload', attribution = '' } = req.body;
+      
+      // Validate that imageUrl is provided
+      if (!imageUrl) {
+        return res.status(400).json({ error: 'Image URL is required for replacement' });
+      }
+
+      // Validate URL format
+      try {
+        new URL(imageUrl);
+      } catch {
+        return res.status(400).json({ error: 'Invalid image URL format' });
+      }
+      
+      // Check if default image exists
+      const existingImage = DefaultImage.findById(id);
+      if (!existingImage) {
+        return res.status(404).json({ error: 'Default image not found' });
+      }
+
+      // Update the existing default image record with new image
+      const updatedImage = DefaultImage.update(id, {
+        image_url: imageUrl,
+        source: source,
+        source_attribution: attribution,
+        image_quality: 8 // Default quality for manual uploads
+      });
+
+      res.json({
+        message: 'Default image replaced successfully',
+        defaultImage: updatedImage,
+        previousImageUrl: existingImage.image_url,
+        newImageUrl: imageUrl
+      });
+    } catch (error) {
+      console.error('Error replacing default image:', error);
+      console.error('Error stack:', error.stack);
+      res.status(500).json({ 
+        error: 'Failed to replace default image',
+        details: error.message 
+      });
     }
   }
 

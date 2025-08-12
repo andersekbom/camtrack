@@ -23,6 +23,9 @@ router.post('/cache-image', JobsController.scheduleCacheImage);
 // POST /api/jobs/cache-cleanup - Schedule cache cleanup
 router.post('/cache-cleanup', JobsController.scheduleCacheCleanup);
 
+// POST /api/jobs/populate-default-images - Run default image population script
+router.post('/populate-default-images', JobsController.populateDefaultImages);
+
 // POST /api/jobs/start-processing - Start job processing
 router.post('/start-processing', JobsController.startProcessing);
 

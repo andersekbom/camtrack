@@ -186,6 +186,9 @@ class JobQueueService extends EventEmitter {
         case 'cleanup-cache':
           result = await this.processCleanupCacheJob(job.data);
           break;
+        case 'populate-default-images':
+          result = await this.processPopulateDefaultImagesJob(job.data);
+          break;
         default:
           throw new Error(`Unknown job type: ${job.type}`);
       }
@@ -329,6 +332,40 @@ class JobQueueService extends EventEmitter {
       action: 'cleanup',
       deletedCount: result.deletedCount,
       errorCount: result.errorCount
+    };
+  }
+
+  /**
+   * Process populate default images job
+   */
+  async processPopulateDefaultImagesJob(data) {
+    const DefaultImagePopulator = require('../scripts/populate-default-images');
+    
+    const { 
+      dryRun = false, 
+      enableCaching = true, 
+      skipExisting = true, 
+      minQuality = 4,
+      batchSize = 10 
+    } = data;
+    
+    const populator = new DefaultImagePopulator({
+      dryRun,
+      enableCaching,
+      skipExisting,
+      minQuality,
+      batchSize,
+      verbose: false // Reduce verbosity in job context
+    });
+    
+    const report = await populator.run();
+    
+    return {
+      action: 'populate-completed',
+      stats: report.stats,
+      duration: report.duration,
+      successRate: report.successRate,
+      dryRun
     };
   }
 

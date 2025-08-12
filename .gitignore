@@ -31,9 +31,18 @@ coverage/
 *.sqlite
 !server/database/cameras.db
 
-# Uploads
-uploads/
-!uploads/.gitkeep
+# Uploads - Include image directories but exclude temp files
+uploads/temp/
+uploads/cache/
+uploads/*.tmp
+uploads/*.temp
+!uploads/
+!uploads/cameras/
+!uploads/default-images/
+!uploads/placeholders/
+
+# Include cached default images (server/cached_images/)
+!server/cached_images/
 
 # Build outputs
 dist/

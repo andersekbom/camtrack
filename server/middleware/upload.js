@@ -45,6 +45,34 @@ const uploadCameraImages = upload.fields([
   { name: 'image2', maxCount: 1 }
 ]);
 
+// Configure storage for default images
+const defaultImageStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    // Upload to uploads/default-images directory
+    const uploadPath = path.join(__dirname, '../../uploads/default-images');
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    // Generate unique filename with UUID
+    const extension = path.extname(file.originalname);
+    const uniqueName = `${uuidv4()}${extension}`;
+    cb(null, uniqueName);
+  }
+});
+
+// Configure multer for default images
+const defaultImageUpload = multer({
+  storage: defaultImageStorage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 1 // Maximum 1 file for default images
+  }
+});
+
+// Middleware for handling single default image upload
+const uploadDefaultImage = defaultImageUpload.single('defaultImage');
+
 // Error handling middleware for multer errors
 const handleUploadError = (error, req, res, next) => {
   if (error instanceof multer.MulterError) {
@@ -75,5 +103,6 @@ const handleUploadError = (error, req, res, next) => {
 
 module.exports = {
   uploadCameraImages,
+  uploadDefaultImage,
   handleUploadError
 };
