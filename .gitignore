@@ -29,6 +29,7 @@ coverage/
 # Database (exclude general database files but include our specific database)
 *.db
 *.sqlite
+*.backup
 !server/database/cameras.db
 
 # Uploads - Include image directories but exclude temp files

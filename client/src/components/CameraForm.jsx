@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { deleteCameraImage } from '../services/api'
 
 const CameraForm = ({ camera, onSubmit, onCancel, isEdit = false }) => {
   const initCamera = camera || {}
@@ -87,7 +88,23 @@ const CameraForm = ({ camera, onSubmit, onCancel, isEdit = false }) => {
     }
   }
 
-  const removeImage = (imageKey) => {
+  const removeImage = async (imageKey) => {
+    // If editing an existing camera and there's an existing image, delete from server
+    if (isEdit && camera && camera[`${imageKey}_path`]) {
+      try {
+        const imageNumber = imageKey === 'image1' ? 1 : 2
+        await deleteCameraImage(camera.id, imageNumber)
+        
+        // Update the camera object to reflect the deletion
+        camera[`${imageKey}_path`] = null
+      } catch (error) {
+        console.error('Error deleting image:', error)
+        alert('Failed to delete image. Please try again.')
+        return
+      }
+    }
+    
+    // Clear local state and preview
     setImages(prev => ({
       ...prev,
       [imageKey]: null

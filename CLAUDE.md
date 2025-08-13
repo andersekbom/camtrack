@@ -58,3 +58,4 @@ Additional endpoints: `/api/default-images`, `/api/jobs`, `/api/help`
 1. `cd server && npm start`
 2. `cd client && npm run dev` 
 3. Navigate to `http://localhost:5173` or `http://localhost:5174`
+- Make sure to back up the database whenever working on camera management tasks such as troubleshooting API endpoints or adding updating/deleting features.

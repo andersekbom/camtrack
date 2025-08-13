@@ -231,6 +231,43 @@ class Camera {
     }
   }
 
+  // Delete individual camera image
+  static deleteCameraImage(id, imageNumber) {
+    const fs = require('fs');
+    const path = require('path');
+    
+    try {
+      const existing = this.getCameraById(id);
+      if (!existing) {
+        throw new Error('Camera not found');
+      }
+
+      const imageField = imageNumber === 1 ? 'image1_path' : 'image2_path';
+      const imagePath = existing[imageField];
+      
+      // Delete the physical file if it exists
+      if (imagePath) {
+        const fullPath = path.join(process.cwd(), imagePath);
+        try {
+          if (fs.existsSync(fullPath)) {
+            fs.unlinkSync(fullPath);
+          }
+        } catch (fileError) {
+          console.warn(`Warning: Could not delete file ${fullPath}:`, fileError.message);
+        }
+      }
+      
+      // Update database to remove the image path
+      const updateData = {
+        [imageField]: null
+      };
+      
+      return this.updateCamera(id, updateData);
+    } catch (error) {
+      throw new Error(`Error deleting camera image: ${error.message}`);
+    }
+  }
+
   // Clear all cameras (for development/testing)
   static clearAllCameras() {
     try {

@@ -23,7 +23,10 @@
       "Bash(powershell.exe:*)",
       "Bash(/bashes)",
       "Bash(mkdir:*)",
-      "Bash(git ls-tree:*)"
+      "Bash(git ls-tree:*)",
+      "Bash(start test-markdown.html)",
+      "Bash(start http://localhost:5174)",
+      "Bash(cp:*)"
     ],
     "deny": []
   },

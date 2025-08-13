@@ -98,6 +98,11 @@ export const deleteCamera = async (id) => {
   return response.data
 }
 
+export const deleteCameraImage = async (id, imageNumber) => {
+  const response = await axios.delete(`${BASE_URL}/cameras/delete-image/${id}/${imageNumber}`)
+  return response.data
+}
+
 export const clearAllCameras = async () => {
   const response = await axios.delete(`${BASE_URL}/cameras/clear`)
   return response.data

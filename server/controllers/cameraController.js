@@ -239,6 +239,34 @@ class CameraController {
       res.status(500).json({ error: error.message });
     }
   }
+
+  // Delete individual camera image
+  static async deleteCameraImage(req, res) {
+    try {
+      const { id, imageNumber } = req.params;
+      
+      // Validate imageNumber
+      if (imageNumber !== '1' && imageNumber !== '2') {
+        return res.status(400).json({ error: 'Invalid image number. Must be 1 or 2.' });
+      }
+      
+      const camera = Camera.deleteCameraImage(id, parseInt(imageNumber));
+      
+      if (!camera) {
+        return res.status(404).json({ error: 'Camera not found' });
+      }
+      
+      res.json({
+        message: `Image ${imageNumber} deleted successfully`,
+        camera
+      });
+    } catch (error) {
+      if (error.message.includes('Camera not found')) {
+        return res.status(404).json({ error: error.message });
+      }
+      res.status(500).json({ error: error.message });
+    }
+  }
 }
 
 module.exports = CameraController;

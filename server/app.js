@@ -34,6 +34,9 @@ app.get('/api/health', (req, res) => {
 // Camera routes
 app.use('/api/cameras', require('./routes/cameras'));
 
+// Camera image routes (separate to avoid route conflicts)
+app.use('/api/camera-images', require('./routes/cameraImages'));
+
 // Default Images routes
 app.use('/api/default-images', require('./routes/defaultImages'));
 
