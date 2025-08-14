@@ -55,10 +55,17 @@ else
     cleanup
 fi
 
+# Get local IP address
+LOCAL_IP=$(hostname -I | awk '{print $1}')
+
 echo ""
 echo "🎉 Both servers are running!"
-echo "📡 Backend API: http://localhost:3000/api"
-echo "🖥️  Frontend: Check above for Vite URL (usually http://localhost:5173)"
+echo "📡 Backend API:"
+echo "   Local:   http://localhost:3000/api"
+echo "   Network: http://$LOCAL_IP:3000/api"
+echo "🖥️  Frontend:"
+echo "   Local:   http://localhost:5173"
+echo "   Network: http://$LOCAL_IP:5173"
 echo ""
 echo "Press Ctrl+C to stop both servers"
 echo "========================================================"
