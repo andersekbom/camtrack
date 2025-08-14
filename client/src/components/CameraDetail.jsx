@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getCamera } from '../services/api'
 import StarRating from './StarRating'
+import { getImageUrl } from '../services/imageUtils'
 
 const CameraDetail = ({ cameraId, onEdit, onDelete, onClose, darkMode = false, isModal = false }) => {
   const [camera, setCamera] = useState(null)
@@ -56,23 +57,7 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose, darkMode = false, i
     return colorMap[status] || 'text-gray-600'
   }
 
-  // Helper function to build proper image URLs
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null
-    
-    // If it's a Wikipedia URL, use our proxy to avoid CORS issues
-    if (imagePath.includes('wikimedia.org') || imagePath.includes('wikipedia.org')) {
-      return `http://localhost:3000/api/image-proxy?url=${encodeURIComponent(imagePath)}`
-    }
-    
-    // If it's a cached image, use the local server
-    if (imagePath.startsWith('/cached-images/')) {
-      return `http://localhost:3000${imagePath}`
-    }
-    
-    // For local uploads, add the base URL
-    return imagePath.startsWith('/') ? `http://localhost:3000${imagePath}` : `http://localhost:3000/${imagePath}`
-  }
+  // Helper function to build proper image URLs using utility
 
   // Get image source type for display
   const getImageSourceLabel = (imageSource) => {

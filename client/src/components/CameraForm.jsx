@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { deleteCameraImage } from '../services/api'
+import { getImageUrl } from '../services/imageUtils'
 
 const CameraForm = ({ camera, onSubmit, onCancel, isEdit = false }) => {
   const initCamera = camera || {}
@@ -21,8 +22,8 @@ const CameraForm = ({ camera, onSubmit, onCancel, isEdit = false }) => {
     image2: null
   })
   const [imagePreviews, setImagePreviews] = useState({
-    image1: initCamera.image1_path ? `http://localhost:3000/${initCamera.image1_path}` : null,
-    image2: initCamera.image2_path ? `http://localhost:3000/${initCamera.image2_path}` : null
+    image1: getImageUrl(initCamera.image1_path),
+    image2: getImageUrl(initCamera.image2_path)
   })
 
   const handleChange = (e) => {

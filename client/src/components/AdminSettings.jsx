@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import ImportExport from './ImportExport'
 import DefaultImagesAdmin from './DefaultImagesAdmin'
+import { getFullApiUrl } from '../services/imageUtils'
 
 const AdminSettings = ({ onClose, darkMode = false, onImportComplete }) => {
   const [activeTab, setActiveTab] = useState('import-export')
@@ -18,7 +19,7 @@ const AdminSettings = ({ onClose, darkMode = false, onImportComplete }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/cameras/clear', {
+      const response = await fetch(getFullApiUrl('/api/cameras/clear'), {
         method: 'DELETE'
       })
       
@@ -136,7 +137,7 @@ const AdminSettings = ({ onClose, darkMode = false, onImportComplete }) => {
                     Try out API endpoints directly in your browser with the interactive Swagger interface.
                   </p>
                   <a
-                    href="http://localhost:3000/api/docs"
+                    href={getFullApiUrl('/api/docs')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
@@ -163,7 +164,7 @@ const AdminSettings = ({ onClose, darkMode = false, onImportComplete }) => {
                     Clean, readable documentation format optimized for browsing and reference.
                   </p>
                   <a
-                    href="http://localhost:3000/api/docs/redoc"
+                    href={getFullApiUrl('/api/docs/redoc')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
@@ -186,7 +187,7 @@ const AdminSettings = ({ onClose, darkMode = false, onImportComplete }) => {
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <a
-                    href="http://localhost:3000/api/docs/openapi.json"
+                    href={getFullApiUrl('/api/docs/openapi.json')}
                     download="camtracker-api-spec.json"
                     className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border transition-colors ${
                       darkMode 
@@ -198,7 +199,7 @@ const AdminSettings = ({ onClose, darkMode = false, onImportComplete }) => {
                     <span>JSON Format</span>
                   </a>
                   <a
-                    href="http://localhost:3000/api/docs/openapi.yaml"
+                    href={getFullApiUrl('/api/docs/openapi.yaml')}
                     download="camtracker-api-spec.yaml"
                     className={`inline-flex items-center gap-2 px-3 py-2 rounded-md border transition-colors ${
                       darkMode 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { getFullApiUrl, getImageUrl } from '../services/imageUtils'
 
 const DefaultImagesAdmin = ({ onClose, darkMode = false, inline = false }) => {
   const [defaultImages, setDefaultImages] = useState([])
@@ -30,7 +31,7 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false, inline = false }) => {
   const fetchDefaultImages = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://localhost:3000/api/default-images')
+      const response = await fetch(getFullApiUrl('/api/default-images'))
       if (!response.ok) throw new Error('Failed to fetch default images')
       const data = await response.json()
       setDefaultImages(data)
@@ -50,7 +51,7 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false, inline = false }) => {
 
     try {
       setSubmitting(true)
-      const response = await fetch('http://localhost:3000/api/default-images', {
+      const response = await fetch(getFullApiUrl('/api/default-images'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -84,7 +85,7 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false, inline = false }) => {
     if (!confirm('Are you sure you want to delete this default image?')) return
 
     try {
-      const response = await fetch(`http://localhost:3000/api/default-images/${id}`, {
+      const response = await fetch(getFullApiUrl(`/api/default-images/${id}`), {
         method: 'DELETE'
       })
 
@@ -103,7 +104,7 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false, inline = false }) => {
 
     try {
       setPopulatingImages(true)
-      const response = await fetch('http://localhost:3000/api/jobs/populate-default-images', {
+      const response = await fetch(getFullApiUrl('/api/jobs/populate-default-images'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -159,7 +160,7 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false, inline = false }) => {
       formData.append('source', replaceData.source)
       formData.append('attribution', replaceData.attribution)
       
-      const response = await fetch('http://localhost:3000/api/default-images/replace-upload', {
+      const response = await fetch(getFullApiUrl('/api/default-images/replace-upload'), {
         method: 'POST',
         body: formData // Don't set Content-Type header for FormData
       })
@@ -194,28 +195,12 @@ const DefaultImagesAdmin = ({ onClose, darkMode = false, inline = false }) => {
     })
   }
 
-  // Helper function to build proper image URLs
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null
-    
-    // If it's a Wikipedia URL, use our proxy to avoid CORS issues
-    if (imagePath.includes('wikimedia.org') || imagePath.includes('wikipedia.org')) {
-      return `http://localhost:3000/api/image-proxy?url=${encodeURIComponent(imagePath)}`
-    }
-    
-    // If it's a cached image, use the local server
-    if (imagePath.startsWith('/cached-images/')) {
-      return `http://localhost:3000${imagePath}`
-    }
-    
-    // For local uploads, add the base URL if needed
-    return imagePath.startsWith('/') ? `http://localhost:3000${imagePath}` : imagePath
-  }
+  // Helper function to build proper image URLs - using imported utility
 
   const handleSearchWikipedia = async (brand, model) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/image-search/search?brand=${encodeURIComponent(brand)}&model=${encodeURIComponent(model)}`
+        getFullApiUrl(`/api/image-search/search?brand=${encodeURIComponent(brand)}&model=${encodeURIComponent(model)}`)
       )
       
       if (!response.ok) throw new Error('Search failed')

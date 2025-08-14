@@ -31,7 +31,7 @@ function App() {
   const [priceType, setPriceType] = useState('weighted') // 'weighted' or 'kamerastore'
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode')
-    return saved ? JSON.parse(saved) : false
+    return saved ? JSON.parse(saved) : true
   })
 
   const handleAddCamera = () => {

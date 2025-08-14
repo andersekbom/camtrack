@@ -1,7 +1,18 @@
 import axios from 'axios'
 
-// Base URL configuration
-const BASE_URL = 'http://localhost:3000/api'
+// Base URL configuration - dynamically determine backend host
+const getApiBaseUrl = () => {
+  // In development with Vite proxy, use relative URLs
+  if (import.meta.env.DEV && window.location.hostname === 'localhost') {
+    return '/api'
+  }
+  // In production or network access, use same host as frontend with port 3000
+  const protocol = window.location.protocol
+  const hostname = window.location.hostname
+  return `${protocol}//${hostname}:3000/api`
+}
+
+const BASE_URL = getApiBaseUrl()
 
 // Camera API functions
 export const getCameras = async (filters = {}, signal) => {

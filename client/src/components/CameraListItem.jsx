@@ -1,4 +1,5 @@
 import StarRating from './StarRating'
+import { getImageUrl } from '../services/imageUtils'
 
 const CameraListItem = ({ camera, onView, priceType = 'weighted' }) => {
   const {
@@ -33,23 +34,7 @@ const CameraListItem = ({ camera, onView, priceType = 'weighted' }) => {
   const hasImage = displayImage !== null
   const isDefaultImage = !has_user_images && image_source !== 'user'
   
-  // Build proper image URL
-  const getImageUrl = (imagePath) => {
-    if (!imagePath) return null
-    
-    // If it's a Wikipedia URL, use our proxy to avoid CORS issues
-    if (imagePath.includes('wikimedia.org') || imagePath.includes('wikipedia.org')) {
-      return `http://localhost:3000/api/image-proxy?url=${encodeURIComponent(imagePath)}`
-    }
-    
-    // If it's a cached image, use the local server
-    if (imagePath.startsWith('/cached-images/')) {
-      return `http://localhost:3000${imagePath}`
-    }
-    
-    // For local uploads, add the base URL
-    return imagePath.startsWith('/') ? `http://localhost:3000${imagePath}` : `http://localhost:3000/${imagePath}`
-  }
+  // Build proper image URL using utility function
 
   return (
     <div 
