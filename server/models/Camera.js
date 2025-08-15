@@ -132,8 +132,7 @@ class Camera {
         kamerastore_price,
         sold_price,
         comment,
-        image1_path,
-        image2_path
+        image1_path
       } = data;
 
       // Calculate weighted price
@@ -144,20 +143,20 @@ class Camera {
       );
 
       // Determine if camera has user images
-      const has_user_images = !!(image1_path || image2_path);
+      const has_user_images = !!image1_path;
 
       const stmt = db.prepare(`
         INSERT INTO cameras (
           brand, model, serial, mechanical_status, cosmetic_status,
           kamerastore_price, weighted_price, sold_price, comment,
-          image1_path, image2_path, has_user_images
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          image1_path, has_user_images
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       const result = stmt.run(
         brand, model, serial, mechanical_status, cosmetic_status,
         kamerastore_price, weighted_price, sold_price, comment,
-        image1_path, image2_path, has_user_images ? 1 : 0
+        image1_path, has_user_images ? 1 : 0
       );
 
       return this.getCameraById(result.lastInsertRowid);
@@ -186,16 +185,16 @@ class Camera {
         );
       }
 
-      // Update has_user_images flag if image paths changed
-      if (data.image1_path !== undefined || data.image2_path !== undefined) {
-        updatedData.has_user_images = !!(updatedData.image1_path || updatedData.image2_path) ? 1 : 0;
+      // Update has_user_images flag if image path changed
+      if (data.image1_path !== undefined) {
+        updatedData.has_user_images = !!updatedData.image1_path ? 1 : 0;
       }
 
       const stmt = db.prepare(`
         UPDATE cameras SET
           brand = ?, model = ?, serial = ?, mechanical_status = ?, cosmetic_status = ?,
           kamerastore_price = ?, weighted_price = ?, sold_price = ?, comment = ?,
-          image1_path = ?, image2_path = ?, has_user_images = ?, updated_at = CURRENT_TIMESTAMP
+          image1_path = ?, has_user_images = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `);
 
@@ -204,8 +203,7 @@ class Camera {
         updatedData.mechanical_status, updatedData.cosmetic_status,
         updatedData.kamerastore_price, updatedData.weighted_price,
         updatedData.sold_price, updatedData.comment,
-        updatedData.image1_path, updatedData.image2_path, 
-        updatedData.has_user_images, id
+        updatedData.image1_path, updatedData.has_user_images, id
       );
 
       return this.getCameraById(id);
@@ -242,8 +240,12 @@ class Camera {
         throw new Error('Camera not found');
       }
 
-      const imageField = imageNumber === 1 ? 'image1_path' : 'image2_path';
-      const imagePath = existing[imageField];
+      // Only support image1 now
+      if (imageNumber !== 1) {
+        throw new Error('Only image1 is supported');
+      }
+
+      const imagePath = existing.image1_path;
       
       // Delete the physical file if it exists
       if (imagePath) {
@@ -259,7 +261,7 @@ class Camera {
       
       // Update database to remove the image path
       const updateData = {
-        [imageField]: null
+        image1_path: null
       };
       
       return this.updateCamera(id, updateData);

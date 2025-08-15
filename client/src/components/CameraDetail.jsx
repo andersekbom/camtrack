@@ -177,45 +177,27 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose, darkMode = false, i
           darkMode ? 'text-white' : 'text-gray-900'
         }`}>Images</h3>
         
-        {/* User uploaded images */}
-        {(camera.image1_path || camera.image2_path) && (
+        {/* User uploaded image */}
+        {camera.image1_path && (
           <div className="mb-4">
             <h4 className="text-lg font-medium text-gray-800 mb-3 flex items-center gap-2">
-              <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">User Photos</span>
+              <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">User Photo</span>
             </h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {camera.image1_path && (
-                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                  <img
-                    src={getImageUrl(camera.image1_path)}
-                    alt={`${camera.brand} ${camera.model} - User Image 1`}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
-                    onClick={(e) => {
-                      const modal = document.createElement('div')
-                      modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 cursor-pointer'
-                      modal.innerHTML = `<img src="${e.target.src}" class="max-w-full max-h-full object-contain" />`
-                      modal.onclick = () => document.body.removeChild(modal)
-                      document.body.appendChild(modal)
-                    }}
-                  />
-                </div>
-              )}
-              {camera.image2_path && (
-                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-                  <img
-                    src={getImageUrl(camera.image2_path)}
-                    alt={`${camera.brand} ${camera.model} - User Image 2`}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
-                    onClick={(e) => {
-                      const modal = document.createElement('div')
-                      modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 cursor-pointer'
-                      modal.innerHTML = `<img src="${e.target.src}" class="max-w-full max-h-full object-contain" />`
-                      modal.onclick = () => document.body.removeChild(modal)
-                      document.body.appendChild(modal)
-                    }}
-                  />
-                </div>
-              )}
+            <div className="max-w-md">
+              <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+                <img
+                  src={getImageUrl(camera.image1_path)}
+                  alt={`${camera.brand} ${camera.model} - User Image`}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform cursor-pointer"
+                  onClick={(e) => {
+                    const modal = document.createElement('div')
+                    modal.className = 'fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 cursor-pointer'
+                    modal.innerHTML = `<img src="${e.target.src}" class="max-w-full max-h-full object-contain" />`
+                    modal.onclick = () => document.body.removeChild(modal)
+                    document.body.appendChild(modal)
+                  }}
+                />
+              </div>
             </div>
           </div>
         )}
@@ -292,7 +274,7 @@ const CameraDetail = ({ cameraId, onEdit, onDelete, onClose, darkMode = false, i
         )}
         
         {/* No images fallback */}
-        {!camera.primary_image && !camera.image1_path && !camera.image2_path && (
+        {!camera.primary_image && !camera.image1_path && (
           <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center max-w-md">
             <div className="text-center text-gray-400">
               <svg className="mx-auto h-16 w-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

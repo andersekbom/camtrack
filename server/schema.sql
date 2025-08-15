@@ -10,7 +10,6 @@ CREATE TABLE IF NOT EXISTS cameras (
     sold_price DECIMAL(10, 2),
     comment TEXT,
     image1_path VARCHAR(500),
-    image2_path VARCHAR(500),
     default_image_url VARCHAR(500),
     default_image_source VARCHAR(200),
     has_user_images BOOLEAN DEFAULT 0,

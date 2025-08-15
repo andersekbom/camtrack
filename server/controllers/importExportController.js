@@ -40,8 +40,7 @@ class ImportExportController {
           { label: 'Weighted Price', value: 'weighted_price' },
           { label: 'Sold Price', value: 'sold_price' },
           { label: 'Comment', value: 'comment' },
-          { label: 'Image 1 Path', value: 'image1_path' },
-          { label: 'Image 2 Path', value: 'image2_path' },
+          { label: 'Image Path', value: 'image1_path' },
           { label: 'Created At', value: 'created_at' },
           { label: 'Updated At', value: 'updated_at' }
         ];
@@ -66,8 +65,7 @@ class ImportExportController {
         { label: 'Weighted Price', value: 'weighted_price' },
         { label: 'Sold Price', value: 'sold_price' },
         { label: 'Comment', value: 'comment' },
-        { label: 'Image 1 Path', value: 'image1_path' },
-        { label: 'Image 2 Path', value: 'image2_path' },
+        { label: 'Image Path', value: 'image1_path' },
         { label: 'Created At', value: 'created_at' },
         { label: 'Updated At', value: 'updated_at' }
       ];

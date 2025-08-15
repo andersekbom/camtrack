@@ -99,16 +99,12 @@ class CameraController {
         comment
       } = req.body;
 
-      // Extract image file paths from uploaded files
+      // Extract image file path from uploaded file
       let image1_path = null;
-      let image2_path = null;
       
       if (req.files) {
         if (req.files.image1 && req.files.image1[0]) {
           image1_path = `uploads/cameras/${req.files.image1[0].filename}`;
-        }
-        if (req.files.image2 && req.files.image2[0]) {
-          image2_path = `uploads/cameras/${req.files.image2[0].filename}`;
         }
       }
 
@@ -141,8 +137,7 @@ class CameraController {
         kamerastore_price,
         sold_price,
         comment,
-        image1_path,
-        image2_path
+        image1_path
       });
 
       // Schedule background job to fetch default image if no user images
@@ -163,13 +158,10 @@ class CameraController {
       const { id } = req.params;
       const updates = req.body;
 
-      // Extract image file paths from uploaded files
+      // Extract image file path from uploaded file
       if (req.files) {
         if (req.files.image1 && req.files.image1[0]) {
           updates.image1_path = `uploads/cameras/${req.files.image1[0].filename}`;
-        }
-        if (req.files.image2 && req.files.image2[0]) {
-          updates.image2_path = `uploads/cameras/${req.files.image2[0].filename}`;
         }
       }
 
@@ -245,9 +237,9 @@ class CameraController {
     try {
       const { id, imageNumber } = req.params;
       
-      // Validate imageNumber
-      if (imageNumber !== '1' && imageNumber !== '2') {
-        return res.status(400).json({ error: 'Invalid image number. Must be 1 or 2.' });
+      // Validate imageNumber - only support image1 now
+      if (imageNumber !== '1') {
+        return res.status(400).json({ error: 'Invalid image number. Only image 1 is supported.' });
       }
       
       const camera = Camera.deleteCameraImage(id, parseInt(imageNumber));
@@ -257,7 +249,7 @@ class CameraController {
       }
       
       res.json({
-        message: `Image ${imageNumber} deleted successfully`,
+        message: 'Image deleted successfully',
         camera
       });
     } catch (error) {

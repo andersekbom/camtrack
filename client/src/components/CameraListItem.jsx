@@ -12,7 +12,6 @@ const CameraListItem = ({ camera, onView, priceType = 'weighted' }) => {
     kamerastore_price,
     comment,
     image1_path,
-    image2_path,
     primary_image,
     has_user_images,
     image_source
@@ -30,7 +29,7 @@ const CameraListItem = ({ camera, onView, priceType = 'weighted' }) => {
   }
 
   // Use the enhanced image system - primary_image includes fallback logic
-  const displayImage = primary_image || image1_path || image2_path
+  const displayImage = primary_image || image1_path
   const hasImage = displayImage !== null
   const isDefaultImage = !has_user_images && image_source !== 'user'
   
