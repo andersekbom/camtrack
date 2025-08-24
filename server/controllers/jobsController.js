@@ -200,7 +200,7 @@ class JobsController {
     try {
       const { 
         dryRun = false, 
-        enableCaching = true, 
+        enableDownload = true, 
         skipExisting = true, 
         minQuality = 4,
         batchSize = 10,
@@ -210,7 +210,7 @@ class JobsController {
       // Add a job to run the default image population
       const jobId = jobQueue.addJob('populate-default-images', {
         dryRun,
-        enableCaching,
+        enableDownload,
         skipExisting,
         minQuality: Math.max(1, Math.min(10, minQuality)),
         batchSize: Math.max(1, Math.min(50, batchSize))
@@ -223,7 +223,7 @@ class JobsController {
         jobId,
         options: {
           dryRun,
-          enableCaching,
+          enableDownload,
           skipExisting,
           minQuality,
           batchSize
@@ -301,7 +301,7 @@ class JobsController {
           description: 'Run default image population for all camera models',
           priority: '1-10 (5 recommended)',
           requiredData: [],
-          optionalData: ['dryRun', 'enableCaching', 'skipExisting', 'minQuality', 'batchSize']
+          optionalData: ['dryRun', 'enableDownload', 'skipExisting', 'minQuality', 'batchSize']
         }
       ];
       

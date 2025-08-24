@@ -23,8 +23,7 @@ app.use(express.json());
 // Serve uploaded images statically with performance tracking
 app.use('/uploads', addCacheHeaders, trackImagePerformance, express.static(path.join(__dirname, '../uploads')));
 
-// Serve cached images statically with performance tracking
-app.use('/cached-images', addCacheHeaders, trackImagePerformance, express.static(path.join(__dirname, 'cached_images')));
+// Note: Cached images have been migrated to /uploads/default-images/
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -43,8 +42,7 @@ app.use('/api/default-images', require('./routes/defaultImages'));
 // Image Search routes
 app.use('/api/image-search', require('./routes/imageSearch'));
 
-// Cache routes
-app.use('/api/cache', require('./routes/cache'));
+// Note: Cache routes removed - now using local image storage
 
 // Job Queue routes
 app.use('/api/jobs', require('./routes/jobs'));
@@ -71,5 +69,8 @@ app.use('/api/docs', require('./routes/docs'));
 
 // Help and User Guide routes
 app.use('/api/help', require('./routes/help'));
+
+// Database management routes
+app.use('/api/database', require('./routes/database'));
 
 module.exports = app;

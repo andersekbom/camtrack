@@ -1,6 +1,6 @@
 const https = require('https');
 const { URLSearchParams } = require('url');
-const ImageCacheService = require('./ImageCacheService');
+const ImageDownloadService = require('./ImageDownloadService');
 
 class WikipediaImageService {
   static BASE_URL = 'https://commons.wikimedia.org/w/api.php';
@@ -291,9 +291,9 @@ class WikipediaImageService {
   }
 
   /**
-   * Find best image for a camera with caching support
+   * Find best image for a camera with local download support
    */
-  static async findBestImageForCamera(brand, model, enableCaching = true) {
+  static async findBestImageForCamera(brand, model, enableDownload = true) {
     try {
       const results = await this.searchCameraImages(brand, model, 5);
       
@@ -310,16 +310,19 @@ class WikipediaImageService {
       }
 
       let finalImageUrl = bestResult.url;
-      let cacheInfo = null;
+      let downloadInfo = null;
 
-      // Cache the image if caching is enabled
-      if (enableCaching) {
+      // Download and process the image locally if enabled
+      if (enableDownload) {
         try {
-          cacheInfo = await ImageCacheService.getCachedImage(bestResult.url);
-          finalImageUrl = cacheInfo.url; // Use cached URL
-        } catch (cacheError) {
-          console.warn(`Failed to cache image for ${brand} ${model}:`, cacheError.message);
-          // Continue with original URL if caching fails
+          const imageDownloadService = new ImageDownloadService();
+          downloadInfo = await imageDownloadService.downloadAndProcessImage(bestResult.url);
+          finalImageUrl = downloadInfo.localPath; // Use local path
+          
+          console.log(`✅ Downloaded and processed image for ${brand} ${model}: ${downloadInfo.localPath}`);
+        } catch (downloadError) {
+          console.warn(`Failed to download image for ${brand} ${model}:`, downloadError.message);
+          // Continue with original URL if download fails
         }
       }
 
@@ -329,12 +332,12 @@ class WikipediaImageService {
         source: bestResult.source,
         source_attribution: bestResult.attribution || `${bestResult.author || 'Unknown'}, ${bestResult.license || 'Wikipedia Commons'}`,
         image_quality: bestResult.quality,
-        width: bestResult.width,
-        height: bestResult.height,
+        width: downloadInfo ? downloadInfo.dimensions.width : bestResult.width,
+        height: downloadInfo ? downloadInfo.dimensions.height : bestResult.height,
         license: bestResult.license,
         author: bestResult.author,
-        cached: cacheInfo ? true : false,
-        cache_info: cacheInfo
+        downloaded: downloadInfo ? true : false,
+        download_info: downloadInfo
       };
     } catch (error) {
       console.error(`Failed to find image for ${brand} ${model}:`, error.message);

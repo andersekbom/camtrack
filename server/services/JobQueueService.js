@@ -180,12 +180,7 @@ class JobQueueService extends EventEmitter {
         case 'fetch-default-image':
           result = await this.processFetchDefaultImageJob(job.data);
           break;
-        case 'cache-image':
-          result = await this.processCacheImageJob(job.data);
-          break;
-        case 'cleanup-cache':
-          result = await this.processCleanupCacheJob(job.data);
-          break;
+        // Note: cache-image and cleanup-cache jobs removed - now using local storage
         case 'populate-default-images':
           result = await this.processPopulateDefaultImagesJob(job.data);
           break;
@@ -273,7 +268,7 @@ class JobQueueService extends EventEmitter {
       };
     }
     
-    // Find best image
+    // Find best image with local download
     const bestImage = await WikipediaImageService.findBestImageForCamera(brand, model, true);
     
     if (!bestImage) {
@@ -298,42 +293,12 @@ class JobQueueService extends EventEmitter {
       defaultImageId: defaultImage.id,
       imageUrl: bestImage.image_url,
       quality: bestImage.image_quality,
-      cached: bestImage.cached || false
+      downloaded: bestImage.downloaded || false,
+      downloadInfo: bestImage.download_info || null
     };
   }
 
-  /**
-   * Process cache image job
-   */
-  async processCacheImageJob(data) {
-    const { imageUrl } = data;
-    
-    const ImageCacheService = require('./ImageCacheService');
-    
-    const cachedImage = await ImageCacheService.getCachedImage(imageUrl);
-    
-    return {
-      action: 'cached',
-      cacheKey: cachedImage.cacheKey,
-      size: cachedImage.size,
-      url: cachedImage.url
-    };
-  }
-
-  /**
-   * Process cleanup cache job
-   */
-  async processCleanupCacheJob(data) {
-    const ImageCacheService = require('./ImageCacheService');
-    
-    const result = await ImageCacheService.cleanupExpiredCache();
-    
-    return {
-      action: 'cleanup',
-      deletedCount: result.deletedCount,
-      errorCount: result.errorCount
-    };
-  }
+  // Note: Cache job processors removed - now using local image storage
 
   /**
    * Process populate default images job
@@ -343,7 +308,7 @@ class JobQueueService extends EventEmitter {
     
     const { 
       dryRun = false, 
-      enableCaching = true, 
+      enableDownload = true, 
       skipExisting = true, 
       minQuality = 4,
       batchSize = 10 
@@ -351,7 +316,7 @@ class JobQueueService extends EventEmitter {
     
     const populator = new DefaultImagePopulator({
       dryRun,
-      enableCaching,
+      enableDownload,
       skipExisting,
       minQuality,
       batchSize,
@@ -417,31 +382,7 @@ class JobQueueService extends EventEmitter {
     return jobId;
   }
 
-  /**
-   * Schedule image caching
-   */
-  scheduleCacheImage(imageUrl) {
-    if (!imageUrl) return null;
-    
-    const jobId = this.addJob('cache-image', {
-      imageUrl
-    }, {
-      priority: 3 // Lower priority than default image fetching
-    });
-    
-    return jobId;
-  }
-
-  /**
-   * Schedule cache cleanup
-   */
-  scheduleCacheCleanup() {
-    const jobId = this.addJob('cleanup-cache', {}, {
-      priority: 1 // Lowest priority
-    });
-    
-    return jobId;
-  }
+  // Note: Cache scheduling methods removed - now using local image storage
 
   /**
    * Clear all jobs

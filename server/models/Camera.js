@@ -303,17 +303,25 @@ class Camera {
 
   // Calculate weighted price using the formula from MVP
   static calculateWeightedPrice(kamerstorePrice, mechanicalStatus, cosmeticStatus) {
-    if (!kamerstorePrice || !mechanicalStatus || !cosmeticStatus) {
+    // Coerce possible string inputs to numbers to avoid string concatenation
+    const ks = Number(kamerstorePrice);
+    const ms = Number(mechanicalStatus);
+    const cs = Number(cosmeticStatus);
+
+    if (!isFinite(ks) || !isFinite(ms) || !isFinite(cs) || ks <= 0) {
       return 0;
     }
 
     // Average of mechanical and cosmetic status (1-5 scale)
-    const avgStatus = (mechanicalStatus + cosmeticStatus) / 2;
-    
+    const avgStatus = (ms + cs) / 2;
+
     // Weight factor: 0.2 for status 1, up to 1.0 for status 5
     const weightFactor = 0.2 + (avgStatus - 1) * 0.2;
-    
-    return Math.round(kamerstorePrice * weightFactor * 100) / 100; // Round to 2 decimal places
+
+    // Guard against any accidental values outside expected range
+    const clampedWeight = Math.max(0, Math.min(1, weightFactor));
+
+    return Math.round(ks * clampedWeight * 100) / 100; // Round to 2 decimal places
   }
 }
 

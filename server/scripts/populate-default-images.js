@@ -3,7 +3,7 @@
 const Camera = require('../models/Camera');
 const DefaultImage = require('../models/DefaultImage');
 const WikipediaImageService = require('../services/WikipediaImageService');
-const ImageCacheService = require('../services/ImageCacheService');
+const ImageDownloadService = require('../services/ImageDownloadService');
 
 class DefaultImagePopulator {
   constructor(options = {}) {
@@ -11,7 +11,7 @@ class DefaultImagePopulator {
       batchSize: 10,
       delayBetweenBatches: 2000, // 2 seconds
       delayBetweenImages: 1000, // 1 second
-      enableCaching: true,
+      enableDownload: true,
       skipExisting: true,
       minQuality: 4,
       dryRun: false,
@@ -50,9 +50,10 @@ class DefaultImagePopulator {
     this.log('🚀 Initializing Default Image Populator...');
     
     try {
-      // Initialize image cache
-      await ImageCacheService.initializeCache();
-      this.log('📁 Image cache initialized');
+      // Initialize image download service
+      const imageDownloadService = new ImageDownloadService();
+      await imageDownloadService.ensureDirectoryExists();
+      this.log('📁 Image download directory initialized');
       
       // Get existing cameras
       const allCameras = await this.getAllCamerasRaw();
@@ -127,11 +128,11 @@ class DefaultImagePopulator {
         }
       }
       
-      // Find best image from Wikipedia
+      // Find best image from Wikipedia with local download
       const bestImage = await WikipediaImageService.findBestImageForCamera(
         brand, 
         model, 
-        this.options.enableCaching
+        this.options.enableDownload
       );
       
       if (!bestImage) {
@@ -166,7 +167,8 @@ class DefaultImagePopulator {
           defaultImageId: defaultImage.id,
           imageUrl: bestImage.image_url,
           quality: bestImage.image_quality,
-          cached: bestImage.cached || false
+          downloaded: bestImage.downloaded || false,
+          downloadInfo: bestImage.download_info || null
         };
       } else {
         this.log(`🔍 [DRY RUN] Would create default image for ${brand} ${model} (Quality: ${bestImage.image_quality})`, 'debug');
