@@ -38,6 +38,26 @@ const AdminSettings = ({ onClose, darkMode = false, onImportComplete }) => {
     }
   }
 
+  const handleCommitDatabase = async () => {
+    if (!confirm('Commit and push the current database file to GitHub? This will make the current database state permanent in the repository.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(getFullApiUrl('/api/database/commit'), {
+        method: 'POST'
+      })
+      
+      if (!response.ok) throw new Error('Failed to commit database')
+      
+      const result = await response.json()
+      alert(`Database committed successfully! ${result.message || 'Changes pushed to GitHub.'}`)
+    } catch (error) {
+      console.error('Failed to commit database:', error)
+      alert(`Failed to commit database: ${error.message}`)
+    }
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className={`${darkMode ? 'bg-gray-800 text-white' : 'bg-white'} rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden`}>
@@ -258,6 +278,21 @@ const AdminSettings = ({ onClose, darkMode = false, onImportComplete }) => {
                 <p className={`text-sm mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                   Development and testing tools for database management. Use with caution.
                 </p>
+              </div>
+
+              <div className={`${darkMode ? 'bg-gray-700' : 'bg-blue-50'} border ${darkMode ? 'border-gray-600' : 'border-blue-200'} rounded-lg p-4`}>
+                <h4 className={`font-medium mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>
+                  💾 Version Control
+                </h4>
+                <p className={`text-sm mb-4 ${darkMode ? 'text-gray-300' : 'text-blue-700'}`}>
+                  Commit the current database state to GitHub for backup and version control.
+                </p>
+                <button
+                  onClick={handleCommitDatabase}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
+                >
+                  Commit Database to GitHub
+                </button>
               </div>
 
               <div className={`${darkMode ? 'bg-gray-700' : 'bg-red-50'} border ${darkMode ? 'border-gray-600' : 'border-red-200'} rounded-lg p-4`}>
